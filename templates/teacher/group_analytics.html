@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Guruh Statistikasi - {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Guruh Statistikasi: {{ group.name }}</h2>
+            <p class="text-muted">Guruh kodi: <strong>{{ group.code }}</strong></p>
+        </div>
+        <div>
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Dashboardga qaytish
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">O'quvchilar Natijalari</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>O'quvchi</th>
+                            <th>Topshirilgan Testlar</th>
+                            <th>O'rtacha Ball</th>
+                            <th>So'nggi Natijalar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in analytics %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-2 bg-info text-white d-flex align-items-center justify-content-center"
+                                        style="width: 35px; height: 35px; border-radius: 50%;">
+                                        {{ stat.student.username[0].upper() }}
+                                    </div>
+                                    {{ stat.student.username }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary rounded-pill">{{ stat.total_quizzes }} ta</span>
+                            </td>
+                            <td>
+                                {% if stat.avg_score >= 80 %}
+                                <span class="text-success fw-bold">{{ stat.avg_score }}%</span>
+                                {% elif stat.avg_score >= 60 %}
+                                <span class="text-warning fw-bold">{{ stat.avg_score }}%</span>
+                                {% else %}
+                                <span class="text-danger fw-bold">{{ stat.avg_score }}%</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    {% for result in stat.recent_results %}
+                                    <span class="badge bg-{{ 'success' if result.score >= 70 else 'danger' }}"
+                                        title="{{ result.quiz.title if result.quiz else 'Test' }}: {{ result.score }}%">
+                                        {{ result.score }}%
+                                    </span>
+                                    {% endfor %}
+                                    {% if not stat.recent_results %}
+                                    <span class="text-muted small">Natijalar yo'q</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

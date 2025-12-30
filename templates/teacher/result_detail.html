@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Test Natijasi - {{ student.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header Card -->
+            <div class="card mb-4 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 bg-light d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-1 fw-bold text-dark">{{ quiz.title if quiz else "O'chirilgan Test" }}</h4>
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-user me-1"></i> {{ student.username }} |
+                            <i class="fas fa-calendar-alt me-1"></i> {{ result.completed_at.strftime('%d.%m.%Y %H:%M')
+                            }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <div class="display-6 fw-bold {{ 'text-success' if result.score >= 80 else 'text-primary' }}">
+                            {{ result.score }}%
+                        </div>
+                        <span class="badge {{ 'bg-success' if result.score >= 80 else 'bg-primary' }} rounded-pill">
+                            {{ result.correct_answers }} / {{ result.total_questions }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {% if snapshot %}
+            <!-- Unique AI Questions Display -->
+            <h5 class="mb-4 fw-bold"><i class="fas fa-brain me-2 text-primary"></i>AI Tomonidan Tuzilgan Savollar</h5>
+            {% for item in snapshot %}
+            <div class="card mb-3 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="fw-bold mb-0">Savol {{ loop.index }}: {{ item.question }}</h6>
+                        {% if item.is_correct %}
+                        <span class="badge bg-success-subtle text-success px-3 py-2">To'g'ri</span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger px-3 py-2">Xato</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3">
+                        {% for key, val in item.options.items() %}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 border 
+                                    {% if key == item.correct_answer %}border-success bg-success-subtle
+                                    {% elif key == item.user_answer and not item.is_correct %}border-danger bg-danger-subtle
+                                    {% else %}bg-light{% endif %}">
+                                <span class="fw-bold me-2">{{ key }}:</span> {{ val }}
+                                {% if key == item.correct_answer %}
+                                <i class="fas fa-check-circle text-success ms-2"></i>
+                                {% endif %}
+                                {% if key == item.user_answer and not item.is_correct %}
+                                <i class="fas fa-times-circle text-danger ms-2"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info rounded-4 border-0 shadow-sm p-4">
+                <i class="fas fa-info-circle me-2"></i> Standart test savollari uchun batafsil ko'rish hozircha mavjud
+                emas.
+                Individual AI testlari uchun savollar yuqorida ko'rinadi.
+            </div>
+            {% endif %}
+
+            <div class="text-center mt-5">
+                <button onclick="window.history.back()" class="btn btn-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Orqaga qaytish
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

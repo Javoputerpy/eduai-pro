@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Xabarlar{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Mening xabarlarim</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">Bosh sahifa</a>
+    </div>
+
+    {% if messages %}
+    <div class="list-group">
+        {% for msg in messages %}
+        <div
+            class="list-group-item list-group-item-action flex-column align-items-start {{ 'bg-light' if msg.is_read else 'border-primary' }}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    {{ msg.sender.username }} ({{ msg.sender.role|capitalize }})
+                </h5>
+                <small class="text-muted">{{ msg.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+            </div>
+            <p class="mb-1 mt-2 lead fs-6">{{ msg.content }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+        <h4>Sizda hech qanday xabar yo'q</h4>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('teacher_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">O'quvchi Profili</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="avatar-lg bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 100px; height: 100px; font-size: 48px;">
+                        {% if student.avatar %}
+                        {{ student.avatar }}
+                        {% else %}
+                        {{ student.username[0].upper() }}
+                        {% endif %}
+                    </div>
+                    <h4 class="mb-1">{{ student.username }}</h4>
+                    <p class="text-muted mb-3">{{ student.email }}</p>
+                    <span class="badge bg-success">O'quvchi</span>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Guruhlar</h6>
+                </div>
+                <div class="card-body">
+                    {% if student_groups %}
+                    <ul class="list-unstyled mb-0">
+                        {% for group in student_groups %}
+                        <li class="mb-2">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            {{ group.name }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">Guruhlar yo'q</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="mb-4">Statistika</h5>
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <h2 class="text-primary mb-1">{{ total_tests }}</h2>
+                                <p class="text-muted mb-0">Topshirgan testlar</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <h2 class="text-success mb-1">{{ avg_score }}%</h2>
+                                <p class="text-muted mb-0">O'rtacha ball</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <h2 class="text-info mb-1">{{ student.get_overall_progress() }}%</h2>
+                                <p class="text-muted mb-0">Umumiy progress</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Fanlar bo'yicha Progress</h6>
+                </div>
+                <div class="card-body">
+                    {% if progress_data %}
+                    {% for progress in progress_data %}
+                    {% set subject = progress.subject %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ subject.name if subject else 'Noma\'lum fan' }}</span>
+                            <span class="fw-bold">{{ progress.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if progress.progress_percentage >= 70 %}bg-success{% elif progress.progress_percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                style="width: {{ progress.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted mb-0">Progress ma'lumotlari yo'q</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">So'nggi Test Natijalari</h6>
+                </div>
+                <div class="card-body">
+                    {% if test_results %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Test</th>
+                                    <th>Fan</th>
+                                    <th>Ball</th>
+                                    <th>Sana</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in test_results[:10] %}
+                                <tr>
+                                    <td>
+                                        {% if result.quiz %}
+                                        {{ result.quiz.title }}
+                                        {% else %}
+                                        Test #{{ result.id }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.subject %}
+                                        <span class="badge bg-light text-dark">{{ result.subject.name }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if result.score >= 70 %}bg-success{% elif result.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ result.score }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ result.completed_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Test natijalari yo'q</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

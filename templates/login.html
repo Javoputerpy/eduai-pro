@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Kirish - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<!-- Scoped CSS for Login Page Only -->
+<style>
+    .auth-container {
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .bg-gradient-premium {
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    }
+
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .form-control-premium {
+        background: rgba(243, 244, 246, 0.5);
+        border: 1px solid #E5E7EB;
+        padding: 0.8rem 1rem;
+        border-radius: 0.75rem;
+    }
+
+    .form-control-premium:focus {
+        background: #FFFFFF;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn-premium {
+        background: linear-gradient(to right, #4F46E5, #6366F1);
+        border: none;
+        padding: 0.8rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+    }
+
+    .social-btn {
+        transition: all 0.2s;
+        border: 1px solid #E5E7EB;
+    }
+
+    .social-btn:hover {
+        background: #F9FAFB;
+        transform: translateY(-2px);
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid auth-container p-0">
+    <div class="row g-0 h-100">
+        <!-- Brand Section (Left) -->
+        <div
+            class="col-lg-6 bg-gradient-premium d-none d-lg-flex flex-column align-items-center justify-content-center position-relative text-white p-5">
+            <!-- Abstract Shapes -->
+            <div class="position-absolute rounded-circle bg-white opacity-10"
+                style="width: 400px; height: 400px; top: -100px; left: -100px;"></div>
+            <div class="position-absolute rounded-circle bg-white opacity-10"
+                style="width: 300px; height: 300px; bottom: 50px; right: 50px;"></div>
+ 
+            <div class="z-1 text-center animate-float">
+                <div class="glass-effect rounded-4 p-4 mb-4 d-inline-block">
+                    <i class="fas fa-brain display-1"></i>
+                </div>
+                <h1 class="display-4 fw-bold mb-3"style="color: #000;">EDUAI Pro</h1>
+                <p class="fs-5 opacity-75 mb-4"style="color: #000;">Sun'iy intellekt kelajak ta'limi xizmatida</p>
+            </div>
+        </div>
+
+        <!-- Form Section (Right) -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center bg-white">
+            <div class="w-100 p-4 p-md-5" style="max-width: 500px;">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold mb-2">Xush Kelibsiz! 👋</h2>
+                    <p class="text-muted">Tizimga kirish uchun ma'lumotlaringizni kiriting</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Username</label>
+                        <input type="text" name="username" class="form-control form-control-premium" placeholder="Login"
+                            required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Parol</label>
+                        <div class="position-relative">
+                            <input type="password" name="password" class="form-control form-control-premium"
+                                placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-premium w-100 text-white mb-4">
+                        Kirish <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+
+                    <div class="position-relative text-center mb-4">
+                        <hr class="text-muted opacity-25">
+                        <span
+                            class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">Yoki</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('login_google') }}"
+                            class="btn social-btn d-flex align-items-center justify-content-center py-2 rounded-3 text-decoration-none text-dark">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20"
+                                class="me-2">
+                            Google orqali kirish
+                        </a>
+                    </div>
+                </form>
+
+                <p class="text-center mt-5 text-muted">
+                    Hisobingiz yo'qmi? <a href="{{ url_for('register') }}"
+                        class="text-primary fw-bold text-decoration-none">Ro'yxatdan o'ting</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

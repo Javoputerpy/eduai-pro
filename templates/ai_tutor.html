@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}AI O'qituvchi - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+.ai-tutor-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+}
+.chat-container {
+    height: 500px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 15px;
+    padding: 1rem;
+    background: #f8f9fa;
+}
+.message {
+    max-width: 80%;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 15px;
+    position: relative;
+}
+.user-message {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 5px;
+}
+.ai-message {
+    background: white;
+    border: 1px solid #dee2e6;
+    margin-right: auto;
+    border-bottom-left-radius: 5px;
+}
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+}
+.voice-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+.voice-recording {
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+.quick-question {
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+.quick-question:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+.subject-card {
+    border: 2px solid transparent;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 1rem;
+}
+.subject-card:hover {
+    border-color: #007bff;
+    transform: translateY(-2px);
+}
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #6c757d;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typing 1.4s infinite;
+}
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+}
+.chat-input-container {
+    position: relative;
+}
+#messageInput {
+    padding-right: 120px;
+}
+.voice-indicator {
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="ai-tutor-hero">
+            <div class="row align-items-center py-4">
+                <div class="col-lg-8">
+                    <div class="px-4">
+                        <h1 class="display-6 fw-bold text-white mb-2">
+                            <i class="fas fa-robot me-3"></i>AI O'qituvchi
+                        </h1>
+                        <p class="lead mb-3 opacity-90">
+                            Haqiqiy AI yordamida o'rganing! Matematika, fizika, dasturlash va boshqa fanlar bo'yicha professional yordam.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-brain me-1"></i>Haqiqiy AI
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-clock me-1"></i>24/7 Yordam
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-graduation-cap me-1"></i>Barcha Fanlar
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="hero-graphic">
+                        <i class="fas fa-comments fa-5x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Asosiy Chat Qismi -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-robot me-2 text-primary"></i>EDUAI Assistant
+                        </h5>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2" id="aiStatus">
+                                <i class="fas fa-circle me-1"></i>Online
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary" id="clearChat">
+                                <i class="fas fa-trash me-1"></i>Tozalash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Chat Messages -->
+                    <div class="chat-container mb-3" id="chatMessages">
+                        <div class="message ai-message">
+                            <div class="d-flex align-items-start">
+                                <div class="ai-avatar me-3">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-robot text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="message-content">
+                                    <strong>EDUAI Assistant:</strong>
+                                    <p class="mb-1">Salom! Men EDUAI Assistant - haqiqiy AI yordamchi. Matematika, fizika, ingliz tili va boshqa fanlar bo'yicha savollaringizga javob berishga tayyorman.</p>
+                                    <p class="mb-0">Sizning o'quv statistikangizni bilaman va shaxsiy yordam bera olaman. Qanday yordam kerak?</p>
+                                    <div class="message-time">Hozir</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Questions -->
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Tez Savollar:</h6>
+                        <div class="d-flex flex-wrap">
+                            <div class="quick-question" data-question="Algebra masalasini qanday yechish kerak?">
+                                <i class="fas fa-calculator me-1"></i>Algebra
+                            </div>
+                            <div class="quick-question" data-question="Fizikadan Nyuton qonunlarini tushuntirib bering">
+                                <i class="fas fa-atom me-1"></i>Fizika
+                            </div>
+                            <div class="quick-question" data-question="Ingliz tilida Present Simple qanday ishlatiladi?">
+                                <i class="fas fa-language me-1"></i>Ingliz tili
+                            </div>
+                            <div class="quick-question" data-question="Python dasturlash tilida funksiya qanday yoziladi?">
+                                <i class="fas fa-code me-1"></i>Dasturlash
+                            </div>
+                            <div class="quick-question" data-question="Mening progressimni tahlil qilib, tavsiya bering">
+                                <i class="fas fa-chart-line me-1"></i>Progress tahlili
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="chat-input-container">
+                        <input type="text" 
+                               class="form-control" 
+                               placeholder="Savolingizni yozing..." 
+                               id="messageInput"
+                               autocomplete="off">
+                        <div class="voice-indicator" id="voiceIndicator">
+                            <i class="fas fa-circle text-danger me-2"></i>
+                            <span>Yozilmoqda...</span>
+                        </div>
+                        <div class="input-group-append position-absolute" style="right: 0; top: 0; bottom: 0;">
+                            <button class="btn btn-outline-secondary h-100 border-0" type="button" id="voiceBtn" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="btn btn-primary h-100 border-0" type="button" id="sendBtn" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- O'ng Panel - Yordamchi Elementlar -->
+        <div class="col-lg-4">
+            <!-- Fanlar Bo'yicha Yordam -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-book me-2 text-primary"></i>Fanlar Bo'yicha Yordam
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% for subject in subjects %}
+                        <div class="col-6">
+                            <div class="card subject-card text-center">
+                                {% if 'matematika' in subject.name.lower() %}
+                                    <i class="fas fa-calculator fa-2x text-primary mb-2"></i>
+                                {% elif 'fizika' in subject.name.lower() %}
+                                    <i class="fas fa-atom fa-2x text-success mb-2"></i>
+                                {% elif 'ingliz' in subject.name.lower() %}
+                                    <i class="fas fa-language fa-2x text-warning mb-2"></i>
+                                {% elif 'informatika' in subject.name.lower() or 'dasturlash' in subject.name.lower() %}
+                                    <i class="fas fa-laptop-code fa-2x text-info mb-2"></i>
+                                {% else %}
+                                    <i class="fas fa-book fa-2x text-secondary mb-2"></i>
+                                {% endif %}
+                                <small>{{ subject.name }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foydalanuvchi Statistikasi -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>Sizning Statistikangiz
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h5 class="text-primary mb-1">{{ current_user.get_overall_progress() }}%</h5>
+                            <small class="text-muted">Progress</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-success mb-1">{{ current_user.get_tests_taken() }}</h5>
+                            <small class="text-muted">Testlar</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-warning mb-1">{{ current_user.get_avg_test_score() }}%</h5>
+                            <small class="text-muted">O'rtacha</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foydali Maslahatlar -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Foydali Maslahatlar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6>Aniq savol bering</h6>
+                        <p class="small mb-0">Savollaringizni batafsil va aniq berish yaxshiroq javob olishga yordam beradi.</p>
+                    </div>
+                    <div class="alert alert-success">
+                        <h6>Misollar so'rang</h6>
+                        <p class="small mb-0">Har bir tushuncha uchun amaliy misollar so'rab, bilimingizni mustahkamlang.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const clearChatBtn = document.getElementById('clearChat');
+    const quickQuestions = document.querySelectorAll('.quick-question');
+    const voiceIndicator = document.getElementById('voiceIndicator');
+    const aiStatus = document.getElementById('aiStatus');
+
+    let isAIProcessing = false;
+
+    // Xabar yuborish
+    async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message || isAIProcessing) return;
+
+        addMessage(message, 'user');
+        messageInput.value = '';
+        sendBtn.disabled = true;
+
+        // Typing indicator
+        showTypingIndicator();
+
+        try {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+            const data = await response.json();
+            
+            hideTypingIndicator();
+            sendBtn.disabled = false;
+
+            if (data.success) {
+                addMessage(data.response, 'ai');
+            } else {
+                addMessage("Kechirasiz, javob berishda xatolik yuz berdi: " + data.response, 'ai');
+            }
+
+        } catch (error) {
+            hideTypingIndicator();
+            sendBtn.disabled = false;
+            addMessage("Internet aloqasi bilan muammo. Iltimos, qayta urinib ko'ring.", 'ai');
+        }
+    }
+
+    // Xabar qo'shish
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const time = new Date().toLocaleTimeString('uz-UZ', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        if (sender === 'user') {
+            messageDiv.innerHTML = `
+                <div class="d-flex align-items-start justify-content-end">
+                    <div class="message-content text-end">
+                        <strong>Siz:</strong>
+                        <p class="mb-1">${text}</p>
+                        <div class="message-time">${time}</div>
+                    </div>
+                    <div class="user-avatar ms-3">
+                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <div class="ai-avatar me-3">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        <strong>EDUAI Assistant:</strong>
+                        <p class="mb-1">${text}</p>
+                        <div class="message-time">${time}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Typing indicator
+    function showTypingIndicator() {
+        isAIProcessing = true;
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message ai-message';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="ai-avatar me-3">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                </div>
+                <div class="message-content">
+                    <strong>EDUAI Assistant:</strong>
+                    <div class="typing-indicator">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        isAIProcessing = false;
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    // Ovozli kirish (simulyatsiya)
+    function startVoiceRecording() {
+        voiceIndicator.style.display = 'block';
+        voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+        voiceBtn.classList.add('btn-danger');
+        voiceBtn.classList.remove('btn-outline-secondary');
+
+        // Simulate voice recognition
+        setTimeout(() => {
+            stopVoiceRecording();
+            const simulatedText = "Bu ovoz orqali savol berish namunasidir. Matematikadan misol tushuntirib bering.";
+            messageInput.value = simulatedText;
+        }, 3000);
+    }
+
+    function stopVoiceRecording() {
+        voiceIndicator.style.display = 'none';
+        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        voiceBtn.classList.remove('btn-danger');
+        voiceBtn.classList.add('btn-outline-secondary');
+    }
+
+    // Event Listeners
+    sendBtn.addEventListener('click', sendMessage);
+    
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    voiceBtn.addEventListener('click', function() {
+        if (voiceIndicator.style.display === 'none') {
+            startVoiceRecording();
+        } else {
+            stopVoiceRecording();
+        }
+    });
+
+    clearChatBtn.addEventListener('click', function() {
+        if (confirm('Chat tarixini tozalashni xohlaysizmi?')) {
+            const messages = chatMessages.querySelectorAll('.message');
+            messages.forEach((msg, index) => {
+                if (index > 0) { // First message (welcome) remains
+                    msg.remove();
+                }
+            });
+        }
+    });
+
+    quickQuestions.forEach(question => {
+        question.addEventListener('click', function() {
+            const questionText = this.getAttribute('data-question');
+            messageInput.value = questionText;
+            sendMessage();
+        });
+    });
+
+    // Subject cards
+    document.querySelectorAll('.subject-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const subjectName = this.querySelector('small').textContent;
+            let question = `${subjectName} fanidan savolim bor. Bu fanda qanday masalalarni yechish mumkin?`;
+            messageInput.value = question;
+            sendMessage();
+        });
+    });
+
+    // Auto-focus input
+    messageInput.focus();
+});
+</script>
+{% endblock %}

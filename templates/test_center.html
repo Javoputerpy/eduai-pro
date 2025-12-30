@@ -1,0 +1,878 @@
+{% extends "base.html" %}
+
+{% block title %}Test Markazi - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+.test-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+}
+.test-card {
+    border: 3px solid transparent;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.test-card:hover {
+    transform: translateY(-10px);
+    border-color: #007bff;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+.difficulty-badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.8rem;
+}
+.stats-card {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 1rem;
+}
+.quick-test-card {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border-radius: 15px;
+}
+.category-filter {
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    transition: all 0.3s ease;
+}
+.category-filter.active {
+    background: #007bff;
+    color: white;
+}
+.timer-display {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #dc3545;
+}
+.question-card {
+    border-left: 4px solid #007bff;
+    border-radius: 10px;
+}
+.option-card {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.option-card:hover {
+    border-color: #007bff;
+    background: rgba(0,123,255,0.05);
+}
+.option-card.selected {
+    border-color: #28a745;
+    background: rgba(40,167,69,0.1);
+}
+.option-card.correct {
+    border-color: #28a745;
+    background: rgba(40,167,69,0.2);
+}
+.option-card.incorrect {
+    border-color: #dc3545;
+    background: rgba(220,53,69,0.1);
+}
+.progress-test {
+    height: 8px;
+}
+.result-card {
+    border-radius: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+.certificate {
+    border: 2px dashed #28a745;
+    border-radius: 15px;
+    background: #f8fff9;
+}
+.subject-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+.math-icon { background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%); }
+.physics-icon { background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); }
+.english-icon { background: linear-gradient(135deg, #FF9A8B 0%, #FF6B6B 100%); }
+.cs-icon { background: linear-gradient(135deg, #92FE9D 0%, #00C9FF 100%); }
+.biology-icon { background: linear-gradient(135deg, #FF9A8B 0%, #FF6B6B 100%); }
+.chemistry-icon { background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); }
+.history-icon { background: linear-gradient(135deg, #FFD93D 0%, #FF6B6B 100%); }
+.geography-icon { background: linear-gradient(135deg, #6BCF7F 0%, #4CA1AF 100%); }
+.literature-icon { background: linear-gradient(135deg, #FF9A8B 0%, #FF6B6B 100%); }
+.language-icon { background: linear-gradient(135deg, #92FE9D 0%, #00C9FF 100%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="test-hero">
+            <div class="row align-items-center py-5">
+                <div class="col-lg-8">
+                    <div class="px-4">
+                        <h1 class="display-5 fw-bold text-white mb-3">
+                            <i class="fas fa-file-alt me-3"></i>Test Markazi
+                        </h1>
+                        <p class="lead mb-4 opacity-90">
+                            Bilimingizni sinab ko'ring! Adaptive testlar, real-time natijalar 
+                            va AI asosida shaxsiylashtirilgan mashqlar.
+                        </p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-clock me-1"></i>10 daqiqalik testlar
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-brain me-1"></i>AI Tavsiyalari
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-trophy me-1"></i>Sertifikatlar
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="hero-graphic">
+                        <i class="fas fa-tasks fa-8x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Test Statistikasi -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <h3 class="text-primary mb-1">{{ current_user.get_tests_taken() }}</h3>
+                                <small class="text-muted">Umumiy Testlar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <h3 class="text-success mb-1">{{ current_user.get_avg_test_score() }}%</h3>
+                                <small class="text-muted">O'rtacha Ball</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <h3 class="text-warning mb-1">{{ subjects|length }}</h3>
+                                <small class="text-muted">Mavjud Fanlar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <h3 class="text-info mb-1">{{ current_user.get_overall_progress() }}%</h3>
+                                <small class="text-muted">Umumiy Progress</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Chap Panel - Test Katalogi -->
+        <div class="col-lg-8">
+            <!-- Filtrlar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="card-title mb-0">Testlar Katalogi</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex flex-wrap justify-content-end">
+                                <button class="btn btn-outline-primary btn-sm category-filter active" data-category="all">Barchasi</button>
+                                {% for subject in subjects %}
+                                <button class="btn btn-outline-primary btn-sm category-filter" data-category="{{ subject.name }}">
+                                    {{ subject.name }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testlar Grid -->
+            <div class="row g-4">
+                {% for subject in subjects %}
+                <!-- Fan Testlari -->
+                <div class="col-12 subject-tests" data-subject="{{ subject.name }}">
+                    <h5 class="text-primary mb-3">
+                        {% if 'matematika' in subject.name.lower() %}
+                            <i class="fas fa-calculator me-2"></i>
+                        {% elif 'fizika' in subject.name.lower() %}
+                            <i class="fas fa-atom me-2"></i>
+                        {% elif 'ingliz' in subject.name.lower() %}
+                            <i class="fas fa-language me-2"></i>
+                        {% elif 'informatika' in subject.name.lower() %}
+                            <i class="fas fa-laptop-code me-2"></i>
+                        {% elif 'biologiya' in subject.name.lower() %}
+                            <i class="fas fa-dna me-2"></i>
+                        {% elif 'kimyo' in subject.name.lower() %}
+                            <i class="fas fa-flask me-2"></i>
+                        {% elif 'tarix' in subject.name.lower() %}
+                            <i class="fas fa-landmark me-2"></i>
+                        {% elif 'ona' in subject.name.lower() %}
+                            <i class="fas fa-book me-2"></i>
+                        {% elif 'geografiya' in subject.name.lower() %}
+                            <i class="fas fa-globe-asia me-2"></i>
+                        {% elif 'adabiyot' in subject.name.lower() %}
+                            <i class="fas fa-pen-fancy me-2"></i>
+                        {% else %}
+                            <i class="fas fa-book me-2"></i>
+                        {% endif %}
+                        {{ subject.name }} Testlari
+                    </h5>
+                    <div class="row g-4">
+                        <!-- Boshlang'ich Test -->
+                        <div class="col-md-6">
+                            <div class="card test-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="subject-icon 
+                                            {% if 'matematika' in subject.name.lower() %}math-icon
+                                            {% elif 'fizika' in subject.name.lower() %}physics-icon
+                                            {% elif 'ingliz' in subject.name.lower() %}english-icon
+                                            {% elif 'informatika' in subject.name.lower() %}cs-icon
+                                            {% elif 'biologiya' in subject.name.lower() %}biology-icon
+                                            {% elif 'kimyo' in subject.name.lower() %}chemistry-icon
+                                            {% elif 'tarix' in subject.name.lower() %}history-icon
+                                            {% elif 'ona' in subject.name.lower() %}language-icon
+                                            {% elif 'geografiya' in subject.name.lower() %}geography-icon
+                                            {% elif 'adabiyot' in subject.name.lower() %}literature-icon
+                                            {% else %}math-icon{% endif %}">
+                                            <i class="fas 
+                                                {% if 'matematika' in subject.name.lower() %}fa-calculator
+                                                {% elif 'fizika' in subject.name.lower() %}fa-atom
+                                                {% elif 'ingliz' in subject.name.lower() %}fa-language
+                                                {% elif 'informatika' in subject.name.lower() %}fa-laptop-code
+                                                {% elif 'biologiya' in subject.name.lower() %}fa-dna
+                                                {% elif 'kimyo' in subject.name.lower() %}fa-flask
+                                                {% elif 'tarix' in subject.name.lower() %}fa-landmark
+                                                {% elif 'ona' in subject.name.lower() %}fa-book
+                                                {% elif 'geografiya' in subject.name.lower() %}fa-globe-asia
+                                                {% elif 'adabiyot' in subject.name.lower() %}fa-pen-fancy
+                                                {% else %}fa-book{% endif %} text-white">
+                                            </i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title">{{ subject.name }} Asoslari</h6>
+                                            <span class="badge difficulty-badge bg-success">Boshlang'ich</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-3">
+                                        {{ subject.description or "Ushbu fanning asosiy tushunchalari va qoidalari" }}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">10 savol</small>
+                                        <small class="text-muted">15 daqiqa</small>
+                                    </div>
+                                    {% set user_progress = namespace(value=0) %}
+                                    {% for progress in current_user.progress %}
+                                        {% if progress.subject_id == subject.id %}
+                                            {% set user_progress.value = progress.progress_percentage %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <div class="progress progress-test mb-3">
+                                        <div class="progress-bar 
+                                            {% if user_progress.value >= 70 %}bg-success
+                                            {% elif user_progress.value >= 30 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            style="width: {{ user_progress.value }}%">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Progress: {{ user_progress.value }}%</small>
+                                        <button class="btn btn-primary btn-sm start-test" 
+                                                data-subject-id="{{ subject.id }}" 
+                                                data-subject-name="{{ subject.name }}"
+                                                data-difficulty="beginner">
+                                            <i class="fas fa-play me-1"></i>Boshlash
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- O'rta Test -->
+                        <div class="col-md-6">
+                            <div class="card test-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="subject-icon 
+                                            {% if 'matematika' in subject.name.lower() %}math-icon
+                                            {% elif 'fizika' in subject.name.lower() %}physics-icon
+                                            {% elif 'ingliz' in subject.name.lower() %}english-icon
+                                            {% elif 'informatika' in subject.name.lower() %}cs-icon
+                                            {% elif 'biologiya' in subject.name.lower() %}biology-icon
+                                            {% elif 'kimyo' in subject.name.lower() %}chemistry-icon
+                                            {% elif 'tarix' in subject.name.lower() %}history-icon
+                                            {% elif 'ona' in subject.name.lower() %}language-icon
+                                            {% elif 'geografiya' in subject.name.lower() %}geography-icon
+                                            {% elif 'adabiyot' in subject.name.lower() %}literature-icon
+                                            {% else %}math-icon{% endif %}">
+                                            <i class="fas 
+                                                {% if 'matematika' in subject.name.lower() %}fa-calculator
+                                                {% elif 'fizika' in subject.name.lower() %}fa-atom
+                                                {% elif 'ingliz' in subject.name.lower() %}fa-language
+                                                {% elif 'informatika' in subject.name.lower() %}fa-laptop-code
+                                                {% elif 'biologiya' in subject.name.lower() %}fa-dna
+                                                {% elif 'kimyo' in subject.name.lower() %}fa-flask
+                                                {% elif 'tarix' in subject.name.lower() %}fa-landmark
+                                                {% elif 'ona' in subject.name.lower() %}fa-book
+                                                {% elif 'geografiya' in subject.name.lower() %}fa-globe-asia
+                                                {% elif 'adabiyot' in subject.name.lower() %}fa-pen-fancy
+                                                {% else %}fa-book{% endif %} text-white">
+                                            </i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title">{{ subject.name }} - O'rta</h6>
+                                            <span class="badge difficulty-badge bg-warning">O'rta</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-3">
+                                        Murakkabroq masalalar va mavzular
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">12 savol</small>
+                                        <small class="text-muted">20 daqiqa</small>
+                                    </div>
+                                    <div class="progress progress-test mb-3">
+                                        <div class="progress-bar bg-secondary" style="width: 0%"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Yangi test</small>
+                                        <button class="btn btn-primary btn-sm start-test" 
+                                                data-subject-id="{{ subject.id }}"
+                                                data-subject-name="{{ subject.name }}"
+                                                data-difficulty="intermediate">
+                                            <i class="fas fa-play me-1"></i>Boshlash
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- O'ng Panel - Tez Test va Statistikalar -->
+        <div class="col-lg-4">
+            <!-- Tez Test -->
+            <div class="card quick-test-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-white">
+                        <i class="fas fa-bolt me-2"></i>Tez Test
+                    </h5>
+                    <p class="text-white mb-3">5 daqiqalik tekshiruv testi</p>
+                    <div class="mb-3">
+                        <select class="form-select" id="quickTestSubject">
+                            <option value="" selected>Fan tanlang</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}" data-name="{{ subject.name }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn btn-light w-100" id="quickTestBtn">
+                        <i class="fas fa-play me-2"></i>Testni Boshlash
+                    </button>
+                </div>
+            </div>
+
+            <!-- So'nggi Natijalar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-history me-2 text-info"></i>So'nggi Natijalar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for result in recent_results %}
+                        {% set subject = subjects|selectattr("id", "equalto", result.subject_id)|first %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ subject.name if subject else 'Noma\'lum fan' }}</h6>
+                                <small class="text-muted">{{ result.completed_at.strftime('%H:%M') }}</small>
+                            </div>
+                            <span class="badge 
+                                {% if result.score >= 70 %}bg-success
+                                {% elif result.score >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %} rounded-pill">
+                                {{ result.score }}%
+                            </span>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Hali test topshirmagansiz</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Tavsiyalari -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-robot me-2 text-primary"></i>AI Tavsiyalari
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set min_progress = namespace(value=100, subject_name='', subject_id='') %}
+                    {% for progress in current_user.progress %}
+                        {% if progress.progress_percentage < min_progress.value %}
+                            {% set min_progress.value = progress.progress_percentage %}
+                            {% set subject_obj = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
+                            {% if subject_obj %}
+                                {% set min_progress.subject_name = subject_obj.name %}
+                                {% set min_progress.subject_id = subject_obj.id %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if min_progress.value < 50 and min_progress.subject_name %}
+                    <div class="alert alert-info">
+                        <h6>{{ min_progress.subject_name }} ni kuchaytiring</h6>
+                        <p class="small mb-2">Siz ushbu fanda {{ min_progress.value }}% progressga egasiz.</p>
+                        <button class="btn btn-sm btn-outline-info" 
+                                onclick="startRecommendedTest('{{ min_progress.subject_id }}')">
+                            Mashq qilish
+                        </button>
+                    </div>
+                    {% endif %}
+                    
+                    {% set max_progress = namespace(value=0, subject_name='') %}
+                    {% for progress in current_user.progress %}
+                        {% if progress.progress_percentage > max_progress.value %}
+                            {% set max_progress.value = progress.progress_percentage %}
+                            {% set subject_obj = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
+                            {% if subject_obj %}
+                                {% set max_progress.subject_name = subject_obj.name %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if max_progress.value >= 80 and max_progress.subject_name %}
+                    <div class="alert alert-success">
+                        <h6>Ajoyib natija!</h6>
+                        <p class="small mb-0">{{ max_progress.subject_name }} bo'yicha juda yaxshi bilimga egasiz.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal oynalar -->
+<!-- Test Modal -->
+<div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="testTitle">Test</h5>
+                <div class="timer-display" id="testTimer">15:00</div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testContent">
+                    <!-- Test savollari shu yerga yuklanadi -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Natijalar Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="resultsModalLabel">Test Natijalari</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resultsContent">
+                    <!-- Natijalar shu yerga yuklanadi -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let testTimer;
+    let currentTestData = null;
+    
+    // Test boshlash
+    document.querySelectorAll('.start-test').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const subjectId = this.getAttribute('data-subject-id');
+            const subjectName = this.getAttribute('data-subject-name');
+            const difficulty = this.getAttribute('data-difficulty');
+            startTest(subjectId, subjectName, difficulty);
+        });
+    });
+
+    // Tez test
+    document.getElementById('quickTestBtn').addEventListener('click', function() {
+        const subjectSelect = document.getElementById('quickTestSubject');
+        const subjectId = subjectSelect.value;
+        const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+        const subjectName = selectedOption.getAttribute('data-name');
+        
+        if (!subjectId) {
+            alert('Iltimos, fan tanlang!');
+            return;
+        }
+        startTest(subjectId, subjectName, 'quick');
+    });
+
+    // Filtrlar
+    document.querySelectorAll('.category-filter').forEach(filter => {
+        filter.addEventListener('click', function() {
+            document.querySelectorAll('.category-filter').forEach(f => f.classList.remove('active'));
+            this.classList.add('active');
+            
+            const category = this.getAttribute('data-category');
+            filterTests(category);
+        });
+    });
+
+    function startTest(subjectId, subjectName, difficulty) {
+        // Oldingi timerlarni tozalash
+        if (testTimer) {
+            clearInterval(testTimer);
+        }
+        
+        const testModal = new bootstrap.Modal(document.getElementById('testModal'));
+        const testTitle = document.getElementById('testTitle');
+        const testContent = document.getElementById('testContent');
+        
+        // Test nomini sozlash
+        testTitle.textContent = `${subjectName} - ${getDifficultyText(difficulty)}`;
+        
+        // Timerni qayta boshlash
+        document.getElementById('testTimer').textContent = '15:00';
+        
+        // Test kontentini yuklash
+        testContent.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Test tayyorlanmoqda...</p>
+            </div>
+        `;
+        
+        testModal.show();
+        
+        // API orqali savollarni yuklash
+        fetch(`/api/start_test/${subjectId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                currentTestData = data;
+                loadTestQuestions(data, subjectId, subjectName);
+            })
+            .catch(error => {
+                console.error('Xatolik:', error);
+                testContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>Xatolik yuz berdi!</h6>
+                        <p>${error.message || 'Test yuklanmadi. Iltimos, qaytadan urinib ko\'ring.'}</p>
+                        <button class="btn btn-sm btn-outline-danger mt-2" onclick="startTest(${subjectId}, '${subjectName}', '${difficulty}')">
+                            Qayta urinish
+                        </button>
+                    </div>
+                `;
+            });
+    }
+
+    function loadTestQuestions(testData, subjectId, subjectName) {
+        const testContent = document.getElementById('testContent');
+        const questions = testData.questions || [];
+        
+        if (questions.length === 0) {
+            testContent.innerHTML = `
+                <div class="alert alert-warning">
+                    <h6>Savollar topilmadi!</h6>
+                    <p>Ushbu fan uchun hali test savollari mavjud emas.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let currentQuestion = 0;
+        let userAnswers = {};
+        let timeLeft = 900; // 15 daqiqa
+        
+        function displayQuestion() {
+            if (currentQuestion >= questions.length) {
+                finishTest(subjectId, subjectName, userAnswers, questions);
+                return;
+            }
+            
+            const question = questions[currentQuestion];
+            testContent.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="progress" style="width: 200px; height: 8px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: ${((currentQuestion + 1) / questions.length) * 100}%">
+                        </div>
+                    </div>
+                    <small>Savol ${currentQuestion + 1}/${questions.length}</small>
+                </div>
+                
+                <div class="question-card p-4 mb-4">
+                    <p class="fw-bold mb-0">${question.question_text}</p>
+                </div>
+                
+                <div class="options-container">
+                    ${Object.entries(question.options).map(([key, value]) => `
+                        <div class="option-card" data-option="${key}">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="answer" id="option${key}">
+                                <label class="form-check-label w-100" for="option${key}">
+                                    <strong>${key}.</strong> ${value}
+                                </label>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-outline-secondary" ${currentQuestion === 0 ? 'disabled' : ''} id="prevBtn">
+                        <i class="fas fa-arrow-left me-1"></i>Oldingi
+                    </button>
+                    <button class="btn btn-primary" id="nextBtn">
+                        ${currentQuestion === questions.length - 1 ? 'Yakunlash' : 'Keyingi'}
+                        <i class="fas fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Option selection
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    userAnswers[question.id] = this.getAttribute('data-option');
+                });
+            });
+            
+            // Navigation
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                if (currentQuestion > 0) {
+                    currentQuestion--;
+                    displayQuestion();
+                }
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                if (!userAnswers[question.id]) {
+                    alert('Iltimos, javob tanlang!');
+                    return;
+                }
+                currentQuestion++;
+                displayQuestion();
+            });
+            
+            // Restore previous answer
+            if (userAnswers[question.id]) {
+                const previousCard = document.querySelector(`.option-card[data-option="${userAnswers[question.id]}"]`);
+                if (previousCard) {
+                    previousCard.classList.add('selected');
+                    previousCard.querySelector('input[type="radio"]').checked = true;
+                }
+            }
+        }
+        
+        displayQuestion();
+        
+        // Timer
+        testTimer = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('testTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(testTimer);
+                finishTest(subjectId, subjectName, userAnswers, questions);
+            }
+        }, 1000);
+    }
+
+    function finishTest(subjectId, subjectName, userAnswers, questions) {
+        // Timerni tozalash
+        if (testTimer) {
+            clearInterval(testTimer);
+        }
+        
+        // Calculate score
+        let correct = 0;
+        questions.forEach(question => {
+            if (userAnswers[question.id] === question.correct_option) {
+                correct++;
+            }
+        });
+        
+        const score = Math.round((correct / questions.length) * 100);
+        
+        // Modalni yopish
+        const testModal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
+        if (testModal) {
+            testModal.hide();
+        }
+        
+        // Send results to server
+        fetch('/api/submit_test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                subject_id: parseInt(subjectId),
+                subject_name: subjectName,
+                answers: userAnswers,
+                score: score,
+                correct_answers: correct,
+                total_questions: questions.length
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showResults(score, correct, questions.length, data.points || 0, subjectName);
+        })
+        .catch(error => {
+            console.error('Natijalarni yuborishda xatolik:', error);
+            showResults(score, correct, questions.length, 0, subjectName);
+        });
+    }
+
+    function showResults(score, correct, total, points, subjectName) {
+        const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
+        const resultsContent = document.getElementById('resultsContent');
+        
+        const testTitle = document.getElementById('testTitle').textContent;
+        
+        resultsContent.innerHTML = `
+            <div class="result-card p-4 text-center mb-4">
+                <h3 class="text-white">${score}%</h3>
+                <p class="text-white mb-0">${correct}/${total} ta to'g'ri javob</p>
+                <p class="text-white mb-0">${points} ball</p>
+            </div>
+            
+            <div class="certificate p-4 mb-4">
+                <h5 class="text-success text-center mb-3">
+                    <i class="fas fa-award me-2"></i>Sertifikat
+                </h5>
+                <p class="text-center mb-2">
+                    <strong>${testTitle}</strong>
+                </p>
+                <p class="text-center text-muted small">
+                    {{ current_user.username }} testni muvaffaqiyatli yakunladi<br>
+                    Ball: ${score}%<br>
+                    Sana: ${new Date().toLocaleDateString('uz-UZ')}
+                </p>
+            </div>
+            
+            <div class="alert alert-info">
+                <h6>AI Tavsiyasi:</h6>
+                <p class="mb-2">
+                    ${score >= 80 ? 
+                        'Ajoyib natija! Keyingi murakkab testga o\'tishingiz mumkin.' :
+                        score >= 60 ?
+                        'Yaxshi natija, lekin ba\'zi tushunchalarni takrorlash kerak.' :
+                        'Asosiy tushunchalarni qaytadan o\'rganish tavsiya etiladi.'
+                    }
+                </p>
+                <button class="btn btn-sm btn-outline-info" onclick="location.reload()">Takrorlash Mashqlari</button>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-primary me-2" onclick="location.reload()">
+                    <i class="fas fa-redo me-1"></i>Yana Test Qilish
+                </button>
+                <button class="btn btn-outline-primary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Yopish
+                </button>
+            </div>
+        `;
+        
+        resultsModal.show();
+    }
+
+    function getDifficultyText(difficulty) {
+        const difficulties = {
+            'beginner': 'Boshlang\'ich',
+            'intermediate': 'O\'rta',
+            'advanced': 'Murakkab',
+            'quick': 'Tez Test'
+        };
+        return difficulties[difficulty] || difficulty;
+    }
+
+    function filterTests(category) {
+        const allTests = document.querySelectorAll('.subject-tests');
+        
+        allTests.forEach(test => {
+            if (category === 'all' || test.getAttribute('data-subject') === category) {
+                test.style.display = 'block';
+            } else {
+                test.style.display = 'none';
+            }
+        });
+    }
+
+    // Tavsiya qilingan testni boshlash
+    window.startRecommendedTest = function(subjectId) {
+        const subjectElement = document.querySelector(`.start-test[data-subject-id="${subjectId}"]`);
+        if (subjectElement) {
+            const subjectName = subjectElement.getAttribute('data-subject-name');
+            startTest(subjectId, subjectName, 'beginner');
+        }
+    };
+});
+</script>
+{% endblock %}

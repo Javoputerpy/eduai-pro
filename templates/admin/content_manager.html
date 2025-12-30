@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Kontent Boshqaruvi - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="fas fa-layer-group me-2 text-primary"></i>Kontent Boshqaruvi</h2>
+            <p class="text-muted">Fanlar va kutubxona materiallarini boshqaring.</p>
+        </div>
+    </div>
+
+    <!-- Subjects Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold"><i class="fas fa-book me-2 text-info"></i>Fanlar ({{ subjects|length
+                    }})</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nomi</th>
+                            <th>Kod</th>
+                            <th>Tavsifi</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects %}
+                        <tr>
+                            <td class="fw-bold">{{ subject.name }}</td>
+                            <td><code>{{ subject.code }}</code></td>
+                            <td>{{ subject.description[:50] }}...</td>
+                            <td>
+                                <form action="{{ url_for('delete_subject', id=subject.id) }}" method="POST"
+                                    onsubmit="return confirm('DIQQAT! Agar bu fanga bog\'liq o\'quvchilar bo\'lsa, o\'chirish mumkin emas. Davom etasizmi?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">Fanlar topilmadi</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Library Section -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold"><i class="fas fa-book-reader me-2 text-warning"></i>Kutubxona ({{
+                    books|length }})</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nomi</th>
+                            <th>Muallif</th>
+                            <th>Yuklovchi</th>
+                            <th>Holati</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td class="fw-bold">{{ book.title }}</td>
+                            <td>{{ book.author }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-light rounded-circle text-center me-2"
+                                        style="width: 30px; height: 30px; line-height: 30px;">
+                                        {{ book.uploader.username[0].upper() }}
+                                    </div>
+                                    {{ book.uploader.username }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if book.is_paid %}
+                                <span class="badge bg-success">Pullik</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Bepul</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-danger btn-sm" disabled
+                                    title="Hozircha o'chirish bloklangan">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Kitoblar topilmadi</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

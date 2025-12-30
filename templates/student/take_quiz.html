@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<!-- MathJax for formula rendering -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+    .code-editor {
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #2d2d2d;
+        color: #f8f8f2;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ quiz.title }}</h4>
+                    <span class="badge bg-light text-dark">{{ quiz.questions|length }} ta savol</span>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('submit_quiz', id=quiz.id) }}" method="POST">
+                        {% for question in quiz.questions %}
+                        <div class="mb-5 border-bottom pb-4">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="fw-bold">{{ loop.index }}.
+                                    {% if question.question_type == 'math' %}
+                                    <span class="math-tex">\({{ question.question_text }}\)</span>
+                                    {% else %}
+                                    {{ question.question_text }}
+                                    {% endif %}
+                                </h5>
+                                <span class="badge bg-secondary">{{ question.points }} ball</span>
+                            </div>
+
+                            <!-- 1. Multiple Choice -->
+                            {% if question.question_type == 'multi' or question.question_type == None %}
+                            <div class="ms-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="question_{{ question.id }}"
+                                        id="q{{ question.id }}a" value="A" required>
+                                    <label class="form-check-label" for="q{{ question.id }}a">A) {{ question.option_a
+                                        }}</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="question_{{ question.id }}"
+                                        id="q{{ question.id }}b" value="B">
+                                    <label class="form-check-label" for="q{{ question.id }}b">B) {{ question.option_b
+                                        }}</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="question_{{ question.id }}"
+                                        id="q{{ question.id }}c" value="C">
+                                    <label class="form-check-label" for="q{{ question.id }}c">C) {{ question.option_c
+                                        }}</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="question_{{ question.id }}"
+                                        id="q{{ question.id }}d" value="D">
+                                    <label class="form-check-label" for="q{{ question.id }}d">D) {{ question.option_d
+                                        }}</label>
+                                </div>
+                            </div>
+
+                            <!-- 2. Open Text -->
+                            {% elif question.question_type == 'text' %}
+                            <div class="ms-3">
+                                <textarea class="form-control" name="question_{{ question.id }}" rows="3"
+                                    placeholder="Javobingizni yozing..." required></textarea>
+                            </div>
+
+                            <!-- 3. Math -->
+                            {% elif question.question_type == 'math' %}
+                            <div class="ms-3">
+                                <label class="form-label text-muted">Javobni yozing (masalan: 5 yoki formulada):</label>
+                                <input type="text" class="form-control" name="question_{{ question.id }}"
+                                    placeholder="Javob..." required>
+                            </div>
+
+                            <!-- 4. Code -->
+                            {% elif question.question_type == 'code' %}
+                            <div class="ms-3">
+                                <label class="badge bg-dark mb-2">{{ question.code_language }}</label>
+                                <textarea class="form-control code-editor" name="question_{{ question.id }}" rows="6"
+                                    placeholder="// Kodni shu yerga yozing..." required></textarea>
+                            </div>
+
+                            <!-- 5. Matching -->
+                            {% elif question.question_type == 'match' %}
+                            <div class="ms-3">
+                                <p class="text-muted small">Mos keluvchi juftliklarni tanlang:</p>
+                                <div class="row g-3">
+                                    {% set options = {'A': question.option_a, 'B': question.option_b, 'C':
+                                    question.option_c, 'D': question.option_d} %}
+                                    {% set pairs_json = question.correct_text | from_json %}
+                                    {% for left, right in pairs_json.items() %}
+                                    <div class="col-md-6 text-end fw-bold pt-2">{{ left }}</div>
+                                    <div class="col-md-6">
+                                        <select class="form-select" name="question_{{ question.id }}_{{ loop.index }}"
+                                            required>
+                                            <option value="">Tanlang...</option>
+                                            {% for key, val in options.items() %}
+                                            <option value="{{ val }}">{{ val }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Testni Topshirish
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Re-render math on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    });
+</script>
+{% endblock %}

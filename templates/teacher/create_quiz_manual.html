@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+
+{% block title %}Mukammal Test Yaratish{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-block {
+        transition: all 0.3s ease;
+        border-left: 5px solid transparent;
+    }
+
+    .question-block:hover {
+        border-left-color: #0d6efd;
+    }
+
+    .type-badge {
+        font-size: 0.8em;
+        padding: 5px 10px;
+        border-radius: 15px;
+    }
+
+    .latex-preview {
+        min-height: 40px;
+        padding: 10px;
+        background: #f8f9fa;
+        border: 1px dashed #dee2e6;
+        margin-top: 5px;
+    }
+</style>
+<!-- MathJax for formula preview -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-layer-group me-2"></i>Mukammal Test Yaratish</h2>
+        <a href="{{ url_for('create_quiz') }}" class="btn btn-secondary">Ortga</a>
+    </div>
+
+    <form id="quizForm" action="{{ url_for('save_quiz') }}" method="POST">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Test Nomi</label>
+                        <input type="text" name="title" class="form-control" required
+                            placeholder="Masalan: Fizika yakuniy nazorat">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fan</label>
+                        <select name="subject_id" class="form-select" required>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="questionsContainer">
+            <!-- Questions will be added here -->
+        </div>
+
+        <div class="text-center mb-5">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary" onclick="addQuestion('multi')">
+                    <i class="fas fa-list-ul me-1"></i> Test (A,B,C,D)
+                </button>
+                <button type="button" class="btn btn-outline-success" onclick="addQuestion('text')">
+                    <i class="fas fa-paragraph me-1"></i> Ochiq Savol
+                </button>
+                <button type="button" class="btn btn-outline-warning text-dark" onclick="addQuestion('match')">
+                    <i class="fas fa-exchange-alt me-1"></i> Moslashtirish
+                </button>
+                <button type="button" class="btn btn-outline-info text-dark" onclick="addQuestion('math')">
+                    <i class="fas fa-square-root-alt me-1"></i> Formula
+                </button>
+                <button type="button" class="btn btn-outline-dark" onclick="addQuestion('code')">
+                    <i class="fas fa-code me-1"></i> Kod yozish
+                </button>
+            </div>
+        </div>
+
+        <input type="hidden" name="questions_json" id="questionsJson">
+
+        <div class="fixed-bottom bg-white border-top p-3 shadow-lg" style="z-index: 1000;">
+            <div class="container d-flex justify-content-between align-items-center">
+                <span class="text-muted" id="totalQuestions">0 ta savol</span>
+                <button type="submit" class="btn btn-success btn-lg px-5">
+                    <i class="fas fa-save me-2"></i>Testni Saqlash
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Templates -->
+<!-- 1. Multiple Choice -->
+<template id="tpl-multi">
+    <div class="card mb-4 question-block shadow-sm" data-type="multi">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-primary me-2">Test</span>
+                <span class="fw-bold fs-5">Savol <span class="q-num"></span></span>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(this)"><i
+                    class="fas fa-trash"></i></button>
+        </div>
+        <div class="card-body">
+            <textarea class="form-control mb-3 q-text" rows="2" placeholder="Savol matnini kiriting..."
+                required></textarea>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group"><span class="input-group-text">A</span><input type="text"
+                            class="form-control opt-a" required></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group"><span class="input-group-text">B</span><input type="text"
+                            class="form-control opt-b" required></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group"><span class="input-group-text">C</span><input type="text"
+                            class="form-control opt-c" required></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group"><span class="input-group-text">D</span><input type="text"
+                            class="form-control opt-d" required></div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <label>To'g'ri javob:</label>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check correct-opt" name="corr_IDX" id="c_IDX_a" value="A" checked>
+                    <label class="btn btn-outline-success btn-sm" for="c_IDX_a">A</label>
+                    <input type="radio" class="btn-check correct-opt" name="corr_IDX" id="c_IDX_b" value="B">
+                    <label class="btn btn-outline-success btn-sm" for="c_IDX_b">B</label>
+                    <input type="radio" class="btn-check correct-opt" name="corr_IDX" id="c_IDX_c" value="C">
+                    <label class="btn btn-outline-success btn-sm" for="c_IDX_c">C</label>
+                    <input type="radio" class="btn-check correct-opt" name="corr_IDX" id="c_IDX_d" value="D">
+                    <label class="btn btn-outline-success btn-sm" for="c_IDX_d">D</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 2. Text / Short Answer -->
+<template id="tpl-text">
+    <div class="card mb-4 question-block shadow-sm" data-type="text">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-success me-2">Ochiq Savol</span>
+                <span class="fw-bold fs-5">Savol <span class="q-num"></span></span>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(this)"><i
+                    class="fas fa-trash"></i></button>
+        </div>
+        <div class="card-body">
+            <textarea class="form-control mb-3 q-text" rows="2" placeholder="Savol matnini kiriting..."
+                required></textarea>
+            <div class="alert alert-light border">
+                <label class="form-label text-muted small"><strong>Namunaviy to'g'ri javob (AI tekshirish
+                        uchun):</strong></label>
+                <textarea class="form-control correct-text" rows="2"
+                    placeholder="O'quvchi yozishi kutilayotgan javob..." required></textarea>
+                <small class="text-muted"><i class="fas fa-robot me-1"></i> AI o'quvchi javobining mazmunini ushbu javob
+                    bilan solishtiradi.</small>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 3. Matching -->
+<template id="tpl-match">
+    <div class="card mb-4 question-block shadow-sm" data-type="match">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-warning text-dark me-2">Moslashtirish</span>
+                <span class="fw-bold fs-5">Savol <span class="q-num"></span></span>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(this)"><i
+                    class="fas fa-trash"></i></button>
+        </div>
+        <div class="card-body">
+            <textarea class="form-control mb-3 q-text" rows="2"
+                placeholder="Topshiriq matni (Masalan: So'zlarni tarjimasi bilan moslashtiring)" required></textarea>
+            <div class="row g-2 match-pairs">
+                <div class="col-md-5"><input type="text" class="form-control match-left" placeholder="Chap taraf (1)"
+                        required></div>
+                <div class="col-md-2 text-center"><i class="fas fa-arrows-alt-h mt-2 text-muted"></i></div>
+                <div class="col-md-5"><input type="text" class="form-control match-right" placeholder="O'ng taraf (A)"
+                        required></div>
+
+                <div class="col-md-5"><input type="text" class="form-control match-left" placeholder="Chap taraf (2)"
+                        required></div>
+                <div class="col-md-2 text-center"><i class="fas fa-arrows-alt-h mt-2 text-muted"></i></div>
+                <div class="col-md-5"><input type="text" class="form-control match-right" placeholder="O'ng taraf (B)"
+                        required></div>
+
+                <div class="col-md-5"><input type="text" class="form-control match-left" placeholder="Chap taraf (3)"
+                        required></div>
+                <div class="col-md-2 text-center"><i class="fas fa-arrows-alt-h mt-2 text-muted"></i></div>
+                <div class="col-md-5"><input type="text" class="form-control match-right" placeholder="O'ng taraf (C)"
+                        required></div>
+
+                <div class="col-md-5"><input type="text" class="form-control match-left" placeholder="Chap taraf (4)"
+                        required></div>
+                <div class="col-md-2 text-center"><i class="fas fa-arrows-alt-h mt-2 text-muted"></i></div>
+                <div class="col-md-5"><input type="text" class="form-control match-right" placeholder="O'ng taraf (D)"
+                        required></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 4. Math / Formula -->
+<template id="tpl-math">
+    <div class="card mb-4 question-block shadow-sm" data-type="math">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-info text-dark me-2">Formula</span>
+                <span class="fw-bold fs-5">Savol <span class="q-num"></span></span>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(this)"><i
+                    class="fas fa-trash"></i></button>
+        </div>
+        <div class="card-body">
+            <label class="form-label">Savol (LaTeX formulalar ishlata olasiz):</label>
+            <!-- Math Symbols Toolbar -->
+            <div class="btn-toolbar mb-2" role="toolbar">
+                <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\sqrt{}')">√</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\frac{}{}')">a/b</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '^{}')">x²</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '_{}')">x₁</button>
+                </div>
+                <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\int')">∫</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\sum')">∑</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\pi')">π</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\alpha')">α</button>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\pm')">±</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\times')">×</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\leq')">≤</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        onclick="insertMathSymbol(this, '\\geq')">≥</button>
+                </div>
+            </div>
+            <textarea class="form-control q-text math-input" rows="3" oninput="updateMathPreview(this)"
+                required></textarea>
+            <div class="latex-preview mt-2 text-muted">Formula ko'rinishi shu yerda bo'ladi...</div>
+
+            <div class="alert alert-light border mt-3">
+                <label class="form-label text-muted small"><strong>To'g'ri javob (LaTeX yoki qiymat):</strong></label>
+                <input type="text" class="form-control correct-text" placeholder="Masalan: 5 yoki \frac{1}{2}" required>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 5. Code -->
+<template id="tpl-code">
+    <div class="card mb-4 question-block shadow-sm" data-type="code">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-dark me-2">Kod Yozish</span>
+                <span class="fw-bold fs-5">Savol <span class="q-num"></span></span>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeQuestion(this)"><i
+                    class="fas fa-trash"></i></button>
+        </div>
+        <div class="card-body">
+            <textarea class="form-control mb-3 q-text" rows="2" placeholder="Masala shartini kiriting..."
+                required></textarea>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Dasturlash tili:</label>
+                    <select class="form-select code-lang">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                    </select>
+                </div>
+            </div>
+            <div class="alert alert-light border">
+                <label class="form-label text-muted small"><strong>Kutilayotgan yechim (AI tekshiradi):</strong></label>
+                <textarea class="form-control correct-text code-editor" rows="10" placeholder="def solution(): ..."
+                    required></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    let questionCount = 0;
+
+    function addQuestion(type) {
+        questionCount++;
+        const tpl = document.getElementById('tpl-' + type);
+        const clone = tpl.content.cloneNode(true);
+
+        // Update styling and IDs
+        clone.querySelector('.q-num').textContent = questionCount;
+
+        // Fix Radio Names for Multi Choice
+        if (type === 'multi') {
+            const radios = clone.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                radio.name = `correct_${questionCount}`;
+                const part = radio.id.split('_')[2];
+                radio.id = `c_${questionCount}_${part}`;
+                radio.nextElementSibling.setAttribute('for', radio.id);
+            });
+        }
+
+        document.getElementById('questionsContainer').appendChild(clone);
+        updateTotal();
+
+        // Initialize CodeMirror for code questions
+        if (type === 'code' && typeof CodeMirror !== 'undefined') {
+            setTimeout(() => initCodeEditors(), 100);
+        }
+
+        // Scroll to new
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function removeQuestion(btn) {
+        if (confirm("Haqiqatan o'chirmoqchimisiz?")) {
+            btn.closest('.question-block').remove();
+            renumber();
+        }
+    }
+
+    function renumber() {
+        const items = document.querySelectorAll('.question-block');
+        items.forEach((item, idx) => {
+            item.querySelector('.q-num').textContent = idx + 1;
+            // Also fix radio names if needed, but simpler to leave uniqueness as is for now
+        });
+        questionCount = items.length;
+        updateTotal();
+    }
+
+    function updateTotal() {
+        document.getElementById('totalQuestions').textContent = document.querySelectorAll('.question-block').length + ' ta savol';
+    }
+
+    function updateMathPreview(textarea) {
+        const preview = textarea.nextElementSibling;
+        preview.textContent = textarea.value;
+        if (window.MathJax) {
+            MathJax.typesetPromise([preview]).catch(err => console.log(err));
+        }
+    }
+
+    function insertMathSymbol(btn, symbol) {
+        const card = btn.closest('.question-block');
+        const textarea = card.querySelector('.math-input');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+
+        textarea.value = text.substring(0, start) + symbol + text.substring(end);
+
+        // Set cursor position
+        const cursorPos = start + symbol.length - 1;
+        textarea.setSelectionRange(cursorPos, cursorPos);
+        textarea.focus();
+
+        // Update preview
+        updateMathPreview(textarea);
+    }
+
+    // Initialize CodeMirror for code editors
+    function initCodeEditors() {
+        document.querySelectorAll('.code-editor').forEach(textarea => {
+            if (!textarea.nextElementSibling || !textarea.nextElementSibling.classList.contains('CodeMirror')) {
+                const card = textarea.closest('.question-block');
+                const langSelect = card ? card.querySelector('.code-lang') : null;
+                const mode = langSelect ? getModeForLang(langSelect.value) : 'python';
+
+                const editor = CodeMirror.fromTextArea(textarea, {
+                    mode: mode,
+                    theme: 'monokai',
+                    lineNumbers: true,
+                    indentUnit: 4,
+                    lineWrapping: true
+                });
+
+                if (langSelect) {
+                    langSelect.addEventListener('change', function () {
+                        editor.setOption('mode', getModeForLang(this.value));
+                    });
+                }
+            }
+        });
+    }
+
+    function getModeForLang(lang) {
+        const modes = {
+            'python': 'python',
+            'javascript': 'javascript',
+            'cpp': 'text/x-c++src',
+            'java': 'text/x-java'
+        };
+        return modes[lang] || 'python';
+    }
+
+    document.getElementById('quizForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const questions = [];
+
+        document.querySelectorAll('.question-block').forEach((block) => {
+            const type = block.dataset.type;
+            const qText = block.querySelector('.q-text').value;
+
+            let qData = {
+                type: type,
+                question: qText
+            };
+
+            if (type === 'multi') {
+                qData.options = {
+                    A: block.querySelector('.opt-a').value,
+                    B: block.querySelector('.opt-b').value,
+                    C: block.querySelector('.opt-c').value,
+                    D: block.querySelector('.opt-d').value
+                };
+                const checked = block.querySelector('.correct-opt:checked');
+                qData.correct_answer = checked ? checked.value : 'A';
+            } else if (type === 'match') {
+                // Collect 4 pairs
+                const lefts = block.querySelectorAll('.match-left');
+                const rights = block.querySelectorAll('.match-right');
+                qData.options = {};
+                qData.correct_answer = {}; // Mapping
+
+                // We'll store option A, B, C, D as the Right side values
+                // And we map 1->A, 2->B etc.
+                // Simplified: Just store exact pairs for now as "correct_text" JSON
+                let pairs = {};
+                for (let i = 0; i < 4; i++) {
+                    pairs[lefts[i].value] = rights[i].value;
+                }
+                qData.correct_text = JSON.stringify(pairs); // Store as text for now
+                qData.options = {
+                    A: rights[0].value,
+                    B: rights[1].value,
+                    C: rights[2].value,
+                    D: rights[3].value
+                };
+                // Store Lefts as question parts? Or formatted text?
+                // Let's store Lefts in question_text implicitly or as a special JSON?
+                // Better: Store pairs in correct_text, render shuffled on frontend.
+            } else if (type === 'code') {
+                qData.code_language = block.querySelector('.code-lang').value;
+                // Get value from CodeMirror if initialized
+                const textarea = block.querySelector('.correct-text');
+                const cm = textarea.nextElementSibling;
+                if (cm && cm.classList.contains('CodeMirror')) {
+                    qData.correct_text = cm.CodeMirror.getValue();
+                } else {
+                    qData.correct_text = textarea.value;
+                }
+            } else {
+                // text, math
+                qData.correct_text = block.querySelector('.correct-text').value;
+            }
+
+            questions.push(qData);
+        });
+
+        document.getElementById('questionsJson').value = JSON.stringify(questions);
+        this.submit();
+    });
+
+    // Start with 1 MC
+    window.onload = () => addQuestion('multi');
+</script>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Yutuqlar - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge-card {
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+}
+.badge-card.earned {
+    border-color: #28a745;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+.badge-card.locked {
+    opacity: 0.6;
+}
+.badge-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem;
+}
+.level-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+.stats-card {
+    border-left: 4px solid #007bff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Yutuqlar</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Sarlavha va Umumiy Statistikalar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-4">
+                    <i class="fas fa-trophy me-3"></i>Mening Yutuqlarim
+                </h2>
+                
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="stats-card p-3">
+                            <h3 class="text-primary mb-0">{{ gamification.points if gamification else 0 }}</h3>
+                            <small class="text-muted">Jami Ball</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-card p-3">
+                            <h3 class="text-success mb-0">{{ user_badges|length }}</h3>
+                            <small class="text-muted">Nishonlar</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-card p-3">
+                            <h3 class="text-warning mb-0">{{ gamification.level if gamification else 1 }}</h3>
+                            <small class="text-muted">Daraja</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card level-card border-0">
+            <div class="card-body text-center">
+                <h4 class="text-white">Darajangiz</h4>
+                <div class="level-display mb-3">
+                    <h1 class="text-white display-4">{{ gamification.level if gamification else 1 }}</h1>
+                </div>
+                <div class="progress bg-white bg-opacity-25" style="height: 10px;">
+                    <div class="progress-bar bg-white" style="width: 65%"></div>
+                </div>
+                <small class="text-white mt-2">Keyingi darajaga: 150 ball qoldi</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nishonlar -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-award me-2 text-warning"></i>Nishonlar Kolleksiyasi
+                </h4>
+                <p class="text-muted mb-0 mt-2">{{ user_badges|length }}/{{ all_badges|length }} nishon topdingiz</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    {% for badge in all_badges %}
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="card badge-card h-100 {{ 'earned' if badge.id in user_badges else 'locked' }}">
+                            <div class="card-body text-center p-4">
+                                <!-- Nishon ikonkasi -->
+                                <div class="badge-icon bg-{{ badge.color }} text-white">
+                                    <i class="fas {{ badge.icon }}"></i>
+                                </div>
+                                
+                                <!-- Nishon nomi -->
+                                <h6 class="card-title">{{ badge.name }}</h6>
+                                
+                                <!-- Tavsif -->
+                                <p class="text-muted small mb-3">{{ badge.description }}</p>
+                                
+                                <!-- Holat -->
+                                {% if badge.id in user_badges %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Topilgan
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-lock me-1"></i>Qulfangan
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress va Maqsadlar -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2 text-info"></i>Yutuq Maqsadlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>10 ta test topshirish</span>
+                        <span>6/10</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: 60%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>5 xil fandan test</span>
+                        <span>3/5</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 60%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Ketma-ket 7 kun</span>
+                        <span>4/7</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: 57%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>100% ball olish</span>
+                        <span>0/1</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Ballar Tarixi
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pointsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ballar grafigi
+    const ctx = document.getElementById('pointsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['1-hafta', '2-hafta', '3-hafta', '4-hafta'],
+            datasets: [{
+                label: 'Ballar',
+                data: [45, 78, 120, 150],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

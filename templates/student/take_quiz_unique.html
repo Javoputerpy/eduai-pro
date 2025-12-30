@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quiz.title }} - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="test-container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Test Header -->
+            <div class="card mb-4 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 bg-primary text-white d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="h4 mb-1 fw-bold">{{ quiz.title }}</h2>
+                        <span class="badge bg-white text-primary rounded-pill">Unique AI Quiz</span>
+                    </div>
+                    <div class="text-end">
+                        <div id="quiz-timer" class="h3 mb-0 fw-bold">--:--</div>
+                        <small class="opacity-75">Qolgan vaqt</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Questions Form -->
+            <form id="unique-quiz-form" action="{{ url_for('submit_quiz', id=quiz.id) }}" method="POST">
+                {% for q in questions %}
+                {% set outer_loop = loop %}
+                <div class="card mb-4 border-0 shadow-sm rounded-4 overflow-hidden question-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start mb-4">
+                            <span class="badge bg-primary-subtle text-primary me-3 p-2 rounded-3">Savol {{ loop.index
+                                }}</span>
+                            <h5 class="mb-0 lh-base">{{ q.question }}</h5>
+                        </div>
+
+                        <div class="options-grid">
+                            {% for key, val in q.options.items() %}
+                            <div class="option-item mb-2">
+                                <input type="radio" class="btn-check" name="question_{{ outer_loop.index0 }}"
+                                    id="q{{ outer_loop.index0 }}_{{ key }}" value="{{ key }}" required>
+                                <label
+                                    class="btn btn-outline-light d-flex align-items-center p-3 text-start w-100 rounded-3 border"
+                                    for="q{{ outer_loop.index0 }}_{{ key }}">
+                                    <span
+                                        class="option-letter me-3 d-flex align-items-center justify-content-center rounded-circle border fw-bold">{{
+                                        key }}</span>
+                                    <span class="option-text text-dark">{{ val }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 mb-5">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-lg py-3 fw-bold">
+                        <i class="fas fa-paper-plane me-2"></i>Testni Yakunlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .question-card {
+        transition: transform 0.2s;
+    }
+
+    .question-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .options-grid .btn-outline-light {
+        background: #f8f9fa;
+        transition: all 0.3s;
+    }
+
+    .options-grid .btn-outline-light:hover {
+        background: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .options-grid .btn-check:checked+.btn-outline-light {
+        background: #ebf5ff;
+        border-color: #0d6efd;
+    }
+
+    .option-letter {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .btn-check:checked+.btn-outline-light .option-letter {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    // Simple timer logic
+    let timeLeft = {{ questions| length * 90 }}; // 1.5 min per question
+    const timerDisplay = document.getElementById('quiz-timer');
+
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById('unique-quiz-form').submit();
+        }
+        timeLeft--;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+</script>
+{% endblock %}

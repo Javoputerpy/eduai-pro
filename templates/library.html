@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Adabiyotlar - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-book me-2"></i>Kutubxona</h2>
+        <a href="{{ url_for('upload_book') }}" class="btn btn-primary">
+            <i class="fas fa-upload me-1"></i> Kitob yuklash
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('library') }}" method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="q" class="form-control" placeholder="Nom, avtor yoki hashtag qidirish..."
+                        value="{{ query }}">
+                </div>
+                <div class="col-md-4">
+                    <select name="type" class="form-select">
+                        <option value="all">Barchasi bo'yicha</option>
+                        <option value="author">Muallif bo'yicha</option>
+                        <option value="user">Yuklovchi bo'yicha</option>
+                        <option value="tag">Hashtag bo'yicha</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="fas fa-search me-1"></i> Qidirish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Books Grid -->
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for book in books %}
+        <div class="col">
+            <div class="card h-100 shadow-sm book-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge {{ 'bg-success' if not book.is_paid else 'bg-warning text-dark' }}">
+                            {{ 'Bepul' if not book.is_paid else book.price }}
+                        </span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>{{
+                            book.created_at.strftime('%d.%m.%Y') }}</small>
+                    </div>
+
+                    <h5 class="card-title text-truncate">{{ book.title }}</h5>
+                    <p class="card-text text-muted small mb-2">
+                        <i class="fas fa-user-pen me-1"></i> {{ book.author or 'Noma\'lum' }}
+                    </p>
+                    <p class="card-text small text-truncate">{{ book.description }}</p>
+
+                    <div class="mb-2">
+                        {% if book.hashtags %}
+                        {% for tag in book.hashtags.split(',') %}
+                        <span class="badge bg-light text-secondary border rounded-pill small">{{ tag }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-secondary text-white small me-2"
+                                style="width:25px;height:25px;font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:50%">
+                                {{ book.uploader.username[0].upper() }}
+                            </div>
+                            <small class="text-muted">{{ book.uploader.username }}</small>
+                        </div>
+                        <a href="{{ url_for('book_detail', id=book.id) }}" class="btn btn-sm btn-outline-primary">
+                            Ko'rish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted">
+                <i class="fas fa-book-open fa-3x mb-3"></i>
+                <p>Hozircha kitoblar yo'q. Birinchi bo'lib yuklang!</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Barcha Testlar{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Mavjud Testlar</h2>
+            <p class="text-muted">O'qituvchilar tomonidan yaratilgan barcha testlar</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for quiz in quizzes %}
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ quiz.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-question-circle me-1"></i> {{ quiz.questions|length }} ta savol
+                    </p>
+                    <p class="text-muted small">
+                        <i class="fas fa-clock me-1"></i> {{ quiz.created_at.strftime('%d.%m.%Y') }}
+                    </p>
+                    <a href="{{ url_for('take_quiz', id=quiz.id) }}" class="btn btn-outline-primary w-100">
+                        Boshlash <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Hozircha testlar mavjud emas.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

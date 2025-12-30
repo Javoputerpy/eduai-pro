@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Bosh Sahifa - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-80 py-5">
+    <div class="col-lg-6">
+        <div class="hero-section">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                <i class="fas fa-robot me-3"></i>EDUAI Pro
+            </h1>
+            <p class="lead fs-4 mb-4">Sun'iy intellekt asosidagi shaxsiylashtirilgan o'qituvchi tizimi</p>
+            <p class="text-muted mb-4">Har bir o'quvchi uchun moslashtirilgan darslar, testlar va ovozli yordamchi bilan zamonaviy ta'lim</p>
+            
+            <div class="mt-5">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3 px-4 py-2">
+                    <i class="fas fa-user-plus me-2"></i>Ro'yxatdan o'tish
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4 py-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Kirish
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-brain fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title">Adaptiv O'qitish</h5>
+                        <p class="card-text">AI har bir o'quvchi darajasiga mos darslar tayyorlaydi</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-microphone fa-3x text-info"></i>
+                        </div>
+                        <h5 class="card-title">Ovozli Yordamchi</h5>
+                        <p class="card-text">Mikrofon orqali savol berishingiz mumkin</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-gamepad fa-3x text-warning"></i>
+                        </div>
+                        <h5 class="card-title">O'yinlashtirish</h5>
+                        <p class="card-text">Ballar, nishonlar va mukofotlar bilan o'rganing</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-chart-line fa-3x text-danger"></i>
+                        </div>
+                        <h5 class="card-title">Detal Statistikalar</h5>
+                        <p class="card-text">Progressingizni kuzatib boring</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card border-0 bg-light">
+            <div class="card-body text-center py-5">
+                <h2 class="mb-4">Qanday Ishlaydi?</h2>
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="step-number">1</div>
+                        <h5>Ro'yxatdan o'ting</h5>
+                        <p>Shaxsiy profilingizni yarating</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-number">2</div>
+                        <h5>Fan tanlang</h5>
+                        <p>Matematika, Fizika, Ingliz tili</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-number">3</div>
+                        <h5>O'rganing</h5>
+                        <p>AI sizga mos darslar beradi</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-number">4</div>
+                        <h5>Test topshiring</h5>
+                        <p>Bilimingizni sinab ko'ring</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.min-vh-80 {
+    min-height: 80vh;
+}
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+.card:hover .feature-icon {
+    transform: scale(1.1);
+}
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+}
+</style>
+{% endblock %}

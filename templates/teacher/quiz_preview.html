@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Testni Tekshirish{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-check-double me-2"></i>Testni Tekshirish</h2>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5>{{ title }}</h5>
+        </div>
+        <div class="card-body">
+            {% for q in questions %}
+            <div class="border-bottom mb-3 pb-3">
+                <p class="fw-bold">{{ loop.index }}. {{ q.question }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="{{ 'text-success fw-bold' if q.correct_answer == 'A' }}">A) {{ q.options.A }}
+                            </li>
+                            <li class="{{ 'text-success fw-bold' if q.correct_answer == 'B' }}">B) {{ q.options.B }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="{{ 'text-success fw-bold' if q.correct_answer == 'C' }}">C) {{ q.options.C }}
+                            </li>
+                            <li class="{{ 'text-success fw-bold' if q.correct_answer == 'D' }}">D) {{ q.options.D }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <form action="{{ url_for('save_quiz') }}" method="POST">
+                <input type="hidden" name="title" value="{{ title }}">
+                <input type="hidden" name="subject_id" value="{{ subject_id }}">
+                <input type="hidden" name="questions_json" value='{{ questions | tojson }}'>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('create_quiz') }}" class="btn btn-secondary">Qaytadan yuklash</a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Tasdiqlash va Saqlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

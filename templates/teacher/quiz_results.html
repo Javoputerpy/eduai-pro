@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('teacher_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('teacher_group_detail', id=group.id) }}">{{ group.name
+                    }}</a></li>
+            <li class="breadcrumb-item active">Natijalar</li>
+        </ol>
+    </nav>
+
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 mb-1">{{ quiz.title }} Natijalari</h1>
+            <p class="text-muted">{{ group.name }} guruhi o'quvchilari uchun test natijalari.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i class="fas fa-print me-2"></i>Chop etish
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>O'quvchi</th>
+                            <th>Email</th>
+                            <th>Holat</th>
+                            <th>Ball</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if student_results %}
+                        {% for item in student_results %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-light rounded-circle text-center me-2"
+                                        style="width: 32px; height: 32px; line-height: 32px;">
+                                        {{ item.student.username[0].upper() }}
+                                    </div>
+                                    <span class="fw-bold">{{ item.student.username }}</span>
+                                </div>
+                            </td>
+                            <td>{{ item.student.email }}</td>
+                            <td>
+                                {% if item.score is not none %}
+                                <span class="badge bg-success">Topshirgan</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Topshirmagan</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.score is not none %}
+                                <span class="fw-bold {{ 'text-success' if item.score >= 80 else 'text-warning' }}">{{
+                                    item.score }}%</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.score is not none %}
+                                <a href="{{ url_for('teacher_result_detail', id=item.result_id) }}"
+                                    class="btn btn-sm btn-light" title="Batafsil">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Hozircha natijalar yo'q.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

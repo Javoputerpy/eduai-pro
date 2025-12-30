@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('teacher_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">{{ group.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 mb-1">{{ group.name }}</h1>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-primary me-2">Kod: {{ group.code }}</span>
+                <span class="text-muted">{{ group.description }}</span>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                <i class="fas fa-user-plus me-2"></i>O'quvchi qo'shish
+            </button>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
+                <i class="fas fa-tasks me-2"></i>Vazifa berish
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Students List -->
+        <div class="col-md-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Guruh A'zolari ({{ members|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if members %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>O'quvchi</th>
+                                    <th>Email</th>
+                                    <th>Progress</th>
+                                    <th>Amallar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in members %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-light rounded-circle text-center me-2"
+                                                style="width: 32px; height: 32px; line-height: 32px;">
+                                                {{ student.username[0].upper() }}
+                                            </div>
+                                            <span class="fw-bold">{{ student.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ student.email }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px; width: 80px;">
+                                            <div class="progress-bar bg-success"
+                                                style="width: {{ student.get_overall_progress() }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ student.get_overall_progress() }}%</small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('view_student_profile', id=student.id) }}"
+                                            class="btn btn-sm btn-outline-info me-1" title="Profil">
+                                            <i class="fas fa-user"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-light text-danger" title="O'chirish">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-users-slash fa-3x mb-3"></i>
+                        <p>Guruhda hali o'quvchilar yo'q</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments List -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Vazifalar</h5>
+                </div>
+                <div class="card-body">
+                    {% if group.assignments %}
+                    {% for assignment in group.assignments %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ assignment.title }}</h6>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-1"
+                                    onclick="editAssignment({{ assignment.id }})" title="Tahrirlash">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteAssignment({{ assignment.id }})" title="O'chirish">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-2">{{ assignment.description[:50] if assignment.description else
+                            '' }}{{ '...' if assignment.description and assignment.description|length > 50 else '' }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-danger">
+                                <i class="far fa-clock me-1"></i>
+                                {{ assignment.due_date.strftime('%d.%m %H:%M') if assignment.due_date else 'Muddat
+                                yo\'q' }}
+                            </small>
+                            <div>
+                                {% if assignment.quiz_id %}
+                                <a href="{{ url_for('group_quiz_results', id=group.id, quiz_id=assignment.quiz_id) }}"
+                                    class="btn btn-sm btn-outline-info me-2">
+                                    <i class="fas fa-chart-bar"></i> Natijalar
+                                </a>
+                                {% endif %}
+                                <span class="badge bg-light text-dark">Faol</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center py-3">Vazifalar yo'q</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">O'quvchi Qo'shish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">O'quvchi Username yoki Email</label>
+                    <input type="text" id="studentSearchInput" class="form-control" placeholder="Qidirish...">
+                </div>
+                <div id="addStudentMessage" class="alert d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+                <button type="button" class="btn btn-primary" onclick="addStudent()">Qo'shish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal fade" id="createAssignmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yangi Vazifa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('create_assignment') }}" method="POST">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sarlavha</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tavsif</label>
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Vazifani Tahrirlash</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form id="editAssignmentForm" method="POST">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Sarlavha</label>
+                                            <input type="text" name="title" id="edit_title" class="form-control"
+                                                required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tavsif</label>
+                                            <textarea name="description" id="edit_description" class="form-control"
+                                                rows="3"></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Muddat</label>
+                                            <input type="datetime-local" name="due_date" id="edit_due_date"
+                                                class="form-control">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Test biriktirish (Ixtiyoriy)</label>
+                                            <select name="quiz_id" id="edit_quiz_id" class="form-select">
+                                                <option value="">Test tanlanmagan</option>
+                                                {% for quiz in quizzes %}
+                                                <option value="{{ quiz.id }}">{{ quiz.title }} ({{ quiz.subject.name if
+                                                    quiz.subject else
+                                                    'Fan yo\'q' }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor
+                                            qilish</button>
+                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        async function addStudent() {
+                            const input = document.getElementById('studentSearchInput');
+                            const messageEl = document.getElementById('addStudentMessage');
+                            const username = input.value.trim();
+
+                            if (!username) return;
+
+                            try {
+                                const response = await fetch('/teacher/api/add_student', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        group_id: {{ group.id }},
+                                    username: username
+                })
+                        });
+
+                        const data = await response.json();
+
+                        messageEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+
+                        if (data.success) {
+                            messageEl.classList.add('alert-success');
+                            messageEl.textContent = "O'quvchi muvaffaqiyatli qo'shildi!";
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            messageEl.classList.add('alert-danger');
+                            messageEl.textContent = data.error || "Xatolik yuz berdi";
+                        }
+        } catch (error) {
+                            console.error('Error:', error);
+                            messageEl.classList.remove('d-none');
+                            messageEl.classList.add('alert-danger');
+                            messageEl.textContent = "Tizim xatoligi";
+                        }
+    }
+
+                        async function editAssignment(id) {
+                            try {
+                                // Vazifa ma'lumotlarini yuklash
+                                const response = await fetch(`/teacher/api/assignment/${id}`);
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    // Formani to'ldirish
+                                    document.getElementById('edit_title').value = data.assignment.title;
+                                    document.getElementById('edit_description').value = data.assignment.description;
+                                    document.getElementById('edit_due_date').value = data.assignment.due_date;
+                                    document.getElementById('edit_quiz_id').value = data.assignment.quiz_id;
+
+                                    // Form action URLni o'rnatish
+                                    document.getElementById('editAssignmentForm').action = `/teacher/assignment/${id}/edit`;
+
+                                    // Modalni ochish
+                                    const modal = new bootstrap.Modal(document.getElementById('editAssignmentModal'));
+                                    modal.show();
+                                } else {
+                                    alert('Xatolik: ' + data.error);
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('Tizim xatoligi');
+                            }
+                        }
+
+                        function deleteAssignment(id) {
+                            if (confirm('Vazifani o\'chirishni tasdiqlaysizmi?')) {
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = `/teacher/assignment/${id}/delete`;
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        }
+                    </script>
+                    {% endblock %}

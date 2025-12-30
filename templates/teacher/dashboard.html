@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header & Quick Stats -->
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-6 fw-bold text-primary">O'qituvchi Paneli</h1>
+            <p class="text-muted lead mb-0">Ta'lim jarayonini boshqaring</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{{ url_for('ai_tutor_page') }}" class="btn btn-warning text-dark">
+                    <i class="fas fa-robot me-2"></i>AI Yordamchi
+                </a>
+                <a href="{{ url_for('create_quiz') }}" class="btn btn-success">
+                    <i class="fas fa-magic me-2"></i>AI Test Tuzish
+                </a>
+                <a href="{{ url_for('create_quiz_unique') }}" class="btn btn-outline-success">
+                    <i class="fas fa-brain me-2"></i>Unique AI Test
+                </a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                    <i class="fas fa-plus me-2"></i>Yangi Guruh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Guruhlarim</h6>
+                            <h2 class="display-5 fw-bold mb-0">{{ groups|length }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Vazifalar</h6>
+                            <h2 class="display-5 fw-bold mb-0">{{ assignments|length }}</h2>
+                        </div>
+                        <i class="fas fa-tasks fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('library') }}" class="text-decoration-none">
+                <div class="card bg-secondary text-white h-100 shadow-sm hover-scale transition">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-2 opacity-75">Adabiyotlar</h6>
+                                <span class="d-block small">Kitob va qo'llanmalar</span>
+                            </div>
+                            <i class="fas fa-book fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('teacher_quizzes') }}" class="text-decoration-none">
+                <div class="card bg-dark text-white h-100 shadow-sm hover-scale transition">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-2 opacity-75">Test Banki</h6>
+                                <span class="d-block small">Barcha testlar</span>
+                            </div>
+                            <i class="fas fa-database fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Groups Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Mening Guruhlarim</h4>
+    </div>
+
+    {% if groups %}
+    <div class="row g-4 mb-5">
+        {% for group in groups %}
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm group-card border-0">
+                <div class="card-header bg-white border-bottom-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title fw-bold text-dark mb-0 text-truncate">{{ group.name }}</h5>
+                        <span class="badge bg-light text-primary border">{{ group.code }}</span>
+                    </div>
+                </div>
+                <div class="card-body pt-1">
+                    <p class="card-text text-muted small">{{ group.description[:100] }}{% if group.description|length >
+                        100 %}...{% endif %}</p>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-group me-2">
+                            <!-- Placeholder avatars -->
+                            <div class="avatar-circle bg-primary text-white small"
+                                style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ group.members|length }} o'quvchi</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 pb-3">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('group_analytics', id=group.id) }}"
+                            class="btn btn-sm btn-outline-info w-25 me-1" title="Statistika">
+                            <i class="fas fa-chart-line"></i>
+                        </a>
+                        <a href="{{ url_for('teacher_group_detail', id=group.id) }}"
+                            class="btn btn-sm btn-primary flex-grow-1">
+                            Guruhga kirish <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-light rounded-3 mb-5 border border-dashed">
+        <i class="fas fa-users-slash fa-4x text-muted mb-3"></i>
+        <h5>Sizda hali guruhlar yo'q</h5>
+        <p class="text-muted">Ishni boshlash uchun yangi guruh yarating</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+            <i class="fas fa-plus me-2"></i>Guruh yaratish
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Recent Assignments -->
+    <h4 class="fw-bold mb-3"><i class="fas fa-clock me-2 text-warning"></i>So'nggi Faol Vazifalar</h4>
+    {% if assignments %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Vazifa</th>
+                            <th>Guruh</th>
+                            <th>Muddat</th>
+                            <th>Status</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">{{ assignment.title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ assignment.group.name }}</span></td>
+                            <td>
+                                {% if assignment.due_date %}
+                                <span class="{{ 'text-danger fw-bold' if assignment.due_date < now else '' }}">
+                                    {{ assignment.due_date.strftime('%d.%m.%Y %H:%M') }}
+                                </span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assignment.is_completed %}
+                                <span class="badge bg-success">Yopilgan</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Faol</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('teacher_group_detail', id=assignment.group.id) }}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">Hozircha faol vazifalar yo'q.</p>
+    {% endif %}
+
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yangi Guruh Yaratish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('create_group') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Guruh Nomi <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="Masalan: Fizika 9-A">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Guruh Kodi (Avtomatik)</label>
+                        <input type="text" class="form-control text-muted" disabled placeholder="Avtomatik yaratiladi">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tavsif</label>
+                        <textarea name="description" class="form-control" rows="3"
+                            placeholder="Guruh maqsadi va rejasi..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Yaratish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+    .hover-scale:hover {
+        transform: translateY(-5px);
+    }
+
+    .avatar-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}

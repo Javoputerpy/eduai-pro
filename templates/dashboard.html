@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <!-- Welcome Section -->
+    <div class="col-12">
+        <div class="card bg-primary text-white border-0 shadow-lg position-relative overflow-hidden mb-4">
+            <div class="position-absolute end-0 top-0 h-100 w-50"
+                style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1)); clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);">
+            </div>
+            <div class="card-body p-4 p-lg-5 position-relative z-1">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h1 class="display-6 fw-bold mb-2">Xush kelibsiz, {{ current_user.username }}! 👋</h1>
+                        <p class="lead opacity-90 mb-0">Bugungi bilim olish sarguzashtiga tayyormisiz?</p>
+
+                        {% if global_announcements %}
+                        <div
+                            class="alert bg-white bg-opacity-20 border-0 text-white mt-4 d-flex align-items-center backdrop-blur">
+                            <i class="fas fa-bullhorn me-3 fs-4"></i>
+                            <div>
+                                <span class="badge bg-warning text-dark me-2">E'lon</span>
+                                {{ global_announcements[0].title }}: {{ global_announcements[0].content[:100] }}...
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-4 text-center d-none d-lg-block">
+                        <i class="fas fa-rocket fa-6x opacity-50 animate__animated animate__bounceIn"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-md-3">
+        <div class="card h-100 card-hover border-start border-4 border-primary">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary me-3">
+                        <i class="fas fa-star fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase fw-bold">Jami Ball</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_score }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" role="progressbar" style="width: 70%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 card-hover border-start border-4 border-success">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success me-3">
+                        <i class="fas fa-check-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase fw-bold">Testlar</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ tests_taken }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ tests_taken * 2 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 card-hover border-start border-4 border-info">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info me-3">
+                        <i class="fas fa-percentage fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase fw-bold">O'rtacha</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ avg_score }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 card-hover border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning me-3">
+                        <i class="fas fa-trophy fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase fw-bold">Daraja</h6>
+                        <h4 class="fw-bold mb-0 text-dark">{{ current_user.rank or 'Yangi a\'zo' }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="col-lg-8">
+        <!-- Actions Grid -->
+        <h5 class="fw-bold mb-4 ps-2 border-start border-4 border-primary">Asosiy Bo'limlar</h5>
+        <div class="row g-3 mb-5">
+            <div class="col-md-6">
+                <a href="{{ url_for('ai_tutor_page') }}"
+                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-gradient-primary text-white rounded-3 p-3 me-3"
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #4F46E5, #8B5CF6);">
+                            <i class="fas fa-robot fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">AI O'qituvchi</h5>
+                            <p class="text-muted small mb-0">Savollaringizga onlayn javob oling va bilimingizni
+                                boyiting.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('test_center') }}"
+                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-gradient-success text-white rounded-3 p-3 me-3"
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #10B981, #059669);">
+                            <i class="fas fa-file-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Test Markazi</h5>
+                            <p class="text-muted small mb-0">Bilimingizni sinash uchun testlar ishlang.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('learning_center') }}"
+                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-gradient-warning text-white rounded-3 p-3 me-3"
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #F59E0B, #D97706);">
+                            <i class="fas fa-graduation-cap fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">O'quv Markazi</h5>
+                            <p class="text-muted small mb-0">Mavzularni o'rganing va darslarni ko'rib chiqing.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('library') }}"
+                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-gradient-info text-white rounded-3 p-3 me-3"
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #3B82F6, #2563EB);">
+                            <i class="fas fa-book fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">Kutubxona</h5>
+                            <p class="text-muted small mb-0">Elektron kitoblar va manbalarni yuklab oling.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pending Quizzes from Teachers -->
+        <!-- Logic for pending quizzes would act properly if passed from backend, assuming variables exist -->
+        <h5 class="fw-bold mb-4 ps-2 border-start border-4 border-warning">Sizga Biriktirilgan Testlar</h5>
+        {% if assigned_quizzes %}
+        <div class="list-group shadow-sm rounded-3 overflow-hidden mb-5">
+            {% for assignment in assigned_quizzes %}
+            <div class="list-group-item p-4 border-0 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-warning text-dark mb-2">Vazifa</span>
+                    <h6 class="mb-1 fw-bold">{{ assignment.quiz.title }}</h6>
+                    <small class="text-muted"><i class="fas fa-chalkboard-teacher me-1"></i>{{
+                        assignment.teacher.username }}</small>
+                </div>
+                <a href="{{ url_for('start_quiz', quiz_id=assignment.quiz.id) }}"
+                    class="btn btn-primary rounded-pill px-4">
+                    Boshlash <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-0 bg-light mb-5">
+            <div class="card-body text-center py-5">
+                <p class="text-muted mb-0">Hozircha faol vazifalar yo'q 🎉</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar Stats -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title fw-bold mb-0">So'nggi Natijalar</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for result in recent_activities %}
+                    <div class="list-group-item p-3 border-light">
+                        <div class="d-flex w-100 justify-content-between mb-1">
+                            <h6 class="mb-0 fw-bold text-dark">{{ result.subject.name }}</h6>
+                            <span class="badge {{ 'bg-success' if result.score >= 80 else 'bg-warning' }} rounded-pill">
+                                {{ result.score }}%
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ result.completed_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted small">
+                        Hali test natijalari yo'q
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title fw-bold mb-0">Progress</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="progressChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Chart code would go here, reusing existing data
+</script>
+{% endblock %}

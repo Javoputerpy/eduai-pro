@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Test Natijalari - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Test Natijalari</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow">
+            <div class="card-body text-center p-5">
+                <div class="result-icon mb-4">
+                    <i class="fas fa-trophy fa-4x text-warning"></i>
+                </div>
+                
+                <h2 class="card-title fw-bold text-primary mb-3">Test Yakunlandi!</h2>
+                
+                <div class="score-display mb-4">
+                    <div class="score-circle mx-auto">
+                        <span class="score-text">{{ score }}%</span>
+                    </div>
+                </div>
+                
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h4 class="text-success">{{ correct_answers }}</h4>
+                            <p class="text-muted mb-0">To'g'ri Javob</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h4 class="text-danger">{{ total_questions - correct_answers }}</h4>
+                            <p class="text-muted mb-0">Noto'g'ri Javob</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h4 class="text-info">{{ time_taken }}s</h4>
+                            <p class="text-muted mb-0">Sarflangan Vaqt</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certificate-section mb-4">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="fas fa-certificate me-2"></i>Sertifikat
+                            </h5>
+                            <pre class="certificate-text">{{ certificate }}</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('start_learning', subject=subject) }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-redo me-2"></i>Qayta Urinish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tavsiyalar -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>AI Tavsiyalari
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if score >= 90 %}
+                <div class="alert alert-success">
+                    <h6>Ajoyib Natija! 🎉</h6>
+                    <p class="mb-0">Siz bu mavzuni mukammal o'zlashtirdingiz. Keyingi murakkab mavzuga o'tishingiz mumkin.</p>
+                </div>
+                {% elif score >= 70 %}
+                <div class="alert alert-info">
+                    <h6>Yaxshi Ishladingiz! 👍</h6>
+                    <p class="mb-0">Bilimingiz yaxshi, lekin ba'zi tushunchalarni takrorlash foydali bo'ladi.</p>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <h6>Takrorlash Kerak 💪</h6>
+                    <p class="mb-0">Bu mavzuni qaytadan o'rganish va ko'proq mashq qilish tavsiya etiladi.</p>
+                </div>
+                {% endif %}
+                
+                <div class="recommendations">
+                    <h6>Keyingi Qadamlar:</h6>
+                    <ul>
+                        <li>Xato qilgan savollaringizni qaytadan ko'rib chiqing</li>
+                        <li>Asosiy tushunchalarni takrorlang</li>
+                        <li>Qo'shimcha mashqlar bajaring</li>
+                        <li>Keyingi darsga o'ting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+}
+.certificate-text {
+    font-family: 'Courier New', monospace;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    white-space: pre-wrap;
+}
+.stat-item h4 {
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

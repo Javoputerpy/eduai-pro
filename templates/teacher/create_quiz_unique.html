@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Unique AI Test Yaratish - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white p-4">
+                    <h3 class="mb-0"><i class="fas fa-magic me-2"></i>Individual AI Test Yaratish</h3>
+                    <p class="mb-0 opacity-75 small">Studentlar uchun har safar turli xil savollar yaratiladi</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Test Nomi</label>
+                            <input type="text" name="title" class="form-control form-control-lg"
+                                placeholder="Masalan: 7-sinf Matematika - 1-chorak" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Fan</label>
+                                <select name="subject_id" class="form-select" required>
+                                    <option value="" selected disabled>Fanni tanlang</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Sinf</label>
+                                <select name="grade" class="form-select" required>
+                                    {% for i in range(5, 12) %}
+                                    <option value="{{ i }}">{{ i }}-sinf</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Mavzu</label>
+                            <input type="text" name="topic" class="form-control"
+                                placeholder="Test qaysi mavzu bo'yicha bo'lishi kerak?" required>
+                            <div class="form-text">AI bu mavzu bo'yicha individual savollar tuzadi</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Savollar soni</label>
+                            <input type="number" name="count" class="form-control" value="10" min="5" max="25" required>
+                            <div class="form-text">Har bir o'quvchi uchun necha dona savol tuzilsin?</div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">
+                                <i class="fas fa-check-circle me-2"></i>Testni Tasdiqlash
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    }
+</style>
+{% endblock %}

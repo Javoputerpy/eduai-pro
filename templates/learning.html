@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject|title }} - O'qish - EDUAI Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ subject|title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-graduation-cap me-2 text-primary"></i>
+                    {{ subject|title }} - {{ session_info.next_topic|title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ session_info.message }}
+                </div>
+
+                <!-- Dars kontenti -->
+                <div class="lesson-content mb-4">
+                    <h5>Dars Matni:</h5>
+                    <div class="p-3 bg-light rounded">
+                        {% if subject == 'matematika' %}
+                            <p>Matematika - bu sonlar, miqdorlar, shakllar va ular o'rtasidagi munosabatlarni o'rganadigan fan.</p>
+                            <p><strong>Asosiy tushunchalar:</strong> Sonlar, algebra, geometriya, hisoblash...</p>
+                        {% elif subject == 'fizika' %}
+                            <p>Fizika - tabiatning asosiy qonunlarini o'rganadigan fan.</p>
+                            <p><strong>Asosiy tushunchalar:</strong> Mexanika, termodinamika, elektromagnetizm...</p>
+                        {% elif subject == 'ingliz_tili' %}
+                            <p>English is a global language spoken by millions worldwide.</p>
+                            <p><strong>Basic concepts:</strong> Grammar, vocabulary, pronunciation...</p>
+                        {% elif subject == 'informatika' %}
+                            <p>Informatika - ma'lumotlarni qayta ishlash va kompyuterlar haqidagi fan.</p>
+                            <p><strong>Asosiy tushunchalar:</strong> Algoritmlar, dasturlash, ma'lumotlar strukturasi...</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Misollar -->
+                <div class="examples mb-4">
+                    <h5>Misollar:</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Misol 1</h6>
+                                    <p class="mb-2">2 + 3 = ?</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showAnswer(1)">Javob</button>
+                                    <div id="answer1" class="mt-2" style="display: none;">
+                                        <strong>Javob: 5</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Misol 2</h6>
+                                    <p class="mb-2">7 × 8 = ?</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showAnswer(2)">Javob</button>
+                                    <div id="answer2" class="mt-2" style="display: none;">
+                                        <strong>Javob: 56</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Ovozli yordamchi -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-microphone me-2 text-info"></i>Ovozli Yordamchi
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <button id="voiceBtn" class="btn btn-info btn-lg voice-btn mb-3">
+                    <i class="fas fa-microphone fa-2x"></i>
+                </button>
+                <p class="text-muted small">Savolingizni aytish uchun tugmani bosing</p>
+                <div id="voiceResult" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Test boshlash -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2 text-success"></i>Testni Boshlash
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <p>Darsni tugatdingizmi? Bilimingizni sinab ko'ring!</p>
+                <button id="startTestBtn" class="btn btn-success btn-lg">
+                    <i class="fas fa-play me-2"></i>Testni Boshlash
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Modal -->
+<div class="modal fade" id="testModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ subject|title }} Testi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showAnswer(num) {
+    const answerDiv = document.getElementById('answer' + num);
+    answerDiv.style.display = answerDiv.style.display === 'none' ? 'block' : 'none';
+}
+
+// Test boshlash
+document.getElementById('startTestBtn').addEventListener('click', function() {
+    fetch('/api/get_questions/{{ subject }}')
+        .then(response => response.json())
+        .then(questions => {
+            const testContent = document.getElementById('testContent');
+            let html = '<form id="testForm">';
+            
+            questions.forEach((question, index) => {
+                html += `
+                    <div class="mb-4">
+                        <h6>${index + 1}. ${question.question}</h6>
+                        <div class="ms-3">
+                            ${question.options.map((option, optIndex) => `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="q${index}" value="${optIndex}" id="q${index}opt${optIndex}">
+                                    <label class="form-check-label" for="q${index}opt${optIndex}">
+                                        ${option}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">Testni Yakunlash</button>
+                </div>
+            </form>`;
+            
+            testContent.innerHTML = html;
+            
+            // Form submit
+            document.getElementById('testForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitTest(questions);
+            });
+            
+            // Modalni ochish
+            new bootstrap.Modal(document.getElementById('testModal')).show();
+        });
+});
+
+function submitTest(questions) {
+    const answers = [];
+    for (let i = 0; i < questions.length; i++) {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        answers.push(selected ? parseInt(selected.value) : -1);
+    }
+    
+    fetch('/api/submit_test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            subject: '{{ subject }}',
+            answers: answers,
+            time_taken: 300 // 5 daqiqa
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const testContent = document.getElementById('testContent');
+            testContent.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                    <h4>Test Yakunlandi!</h4>
+                    <p class="fs-2 fw-bold text-${result.score >= 80 ? 'success' : result.score >= 60 ? 'warning' : 'danger'}">
+                        ${result.score}%
+                    </p>
+                    <p>${result.correct}/${result.total} ta to'g'ri javob</p>
+                    <p>+${result.points_earned} ball</p>
+                    <div class="alert alert-info mt-3">
+                        <pre>${result.certificate}</pre>
+                    </div>
+                    <button class="btn btn-primary" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            `;
+        }
+    });
+}
+
+// Ovozli yordamchi
+document.getElementById('voiceBtn').addEventListener('click', function() {
+    const voiceResult = document.getElementById('voiceResult');
+    voiceResult.innerHTML = '<div class="spinner-border text-info" role="status"></div> Ovoz qabul qilinmoqda...';
+    
+    // Bu yerda ovozni qayta ishlash logikasi bo'ladi
+    setTimeout(() => {
+        voiceResult.innerHTML = `
+            <div class="alert alert-info">
+                <strong>Siz:</strong> "Matematikadan misol tushuntirib bering"<br>
+                <strong>AI:</strong> "Albatta! Qanday misol kerak?"
+            </div>
+        `;
+    }, 2000);
+});
+</script>
+{% endblock %}

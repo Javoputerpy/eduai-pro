@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Foydalanuvchilar - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Foydalanuvchilar</h2>
+        <div>
+            <button class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#broadcastModal">
+                <i class="fas fa-bullhorn me-1"></i> Hammaga xabar
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Ortga
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm" style="transform: none; transition: none;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Foydalanuvchi</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Holat</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>#{{ user.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center"
+                                        style="width: 35px; height: 35px; border-radius: 50%;">
+                                        {{ user.username[0].upper() }}
+                                    </div>
+                                    {{ user.username }}
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                <span class="badge bg-danger">Admin</span>
+                                {% elif user.role == 'teacher' %}
+                                <span class="badge bg-warning text-dark">O'qituvchi</span>
+                                {% else %}
+                                <span class="badge bg-info">O'quvchi</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">Faol</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Muzlatilgan</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.role != 'admin' %}
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editModal{{ user.id }}" title="Tahrirlash">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-info text-white" data-bs-toggle="modal"
+                                        data-bs-target="#messageModal{{ user.id }}" title="Xabar yozish">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+
+                                    <form action="{{ url_for('toggle_user_status', id=user.id) }}" method="POST"
+                                        class="d-inline">
+                                        {% if user.is_active %}
+                                        <button type="submit" class="btn btn-warning" title="Muzlatish"
+                                            onclick="return confirm('Haqiqatan ham bu foydalanuvchini muzlatmoqchimisiz?')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-success" title="Faollashtirish">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <form action="{{ url_for('delete_user', id=user.id) }}" method="POST"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-danger" title="O'chirish"
+                                            onclick="return confirm('Haqiqatan ham o\'chirmoqchimisiz?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Edit Modal -->
+                                <div class="modal fade" id="editModal{{ user.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Tahrirlash: {{ user.username }}</h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="{{ url_for('edit_user', id=user.id) }}" method="POST">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Username</label>
+                                                        <input type="text" name="username" class="form-control"
+                                                            value="{{ user.username }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Email</label>
+                                                        <input type="email" name="email" class="form-control"
+                                                            value="{{ user.email }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Yangi parol (ixtiyoriy)</label>
+                                                        <input type="password" name="password" class="form-control"
+                                                            placeholder="O'zgartirish uchun kiriting">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Bekor qilish</button>
+                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message Modal -->
+                                <div class="modal fade" id="messageModal{{ user.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Xabar yuborish: {{ user.username }}</h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="{{ url_for('send_message') }}" method="POST">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="recipient_id" value="{{ user.id }}">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Xabar matni</label>
+                                                        <textarea name="content" class="form-control" rows="4"
+                                                            required></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Bekor qilish</button>
+                                                    <button type="submit" class="btn btn-primary">Yuborish</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Broadcast Modal -->
+<div class="modal fade" id="broadcastModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hammaga xabar yuborish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('send_message') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="recipient_id" value="all">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Bu xabar adminlardan tashqari barcha foydalanuvchilarga
+                        yuboriladi.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Xabar matni</label>
+                        <textarea name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Yuborish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
