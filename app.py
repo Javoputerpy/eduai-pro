@@ -2338,8 +2338,11 @@ def teacher_result_detail(id):
                          snapshot=snapshot,
                          student=User.query.get(result.user_id))
 
+# Initialize DB on startup (required for production like Gunicorn)
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     port = int(os.environ.get('PORT', 5000))
     print(f"[*] EDUAI Pro ishga tushmoqda... Port: {port}")
     app.run(debug=False, host='0.0.0.0', port=port)
+
