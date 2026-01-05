@@ -24,6 +24,8 @@ wheels/
 # Instance folder (contains DB and sensitive config)
 instance/
 *.db
+.env
+*.env
 
 # OS
 .DS_Store
