@@ -2,11 +2,76 @@
 
 {% block title %}Barcha Testlar{% endblock %}
 
+{% block extra_css %}
+<style>
+    .quiz-card-unique {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quiz-card-unique::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .quiz-card-unique .card-title,
+    .quiz-card-unique .card-text,
+    .quiz-card-unique .text-muted {
+        color: white !important;
+        position: relative;
+        z-index: 1;
+    }
+
+    .quiz-card-unique .btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+    }
+
+    .quiz-card-unique .btn:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: scale(1.05);
+    }
+
+    .ai-badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h2>Mavjud Testlar</h2>
+            <h2><i class="fas fa-clipboard-list me-2 text-primary"></i>Mavjud Testlar</h2>
             <p class="text-muted">O'qituvchilar tomonidan yaratilgan barcha testlar</p>
         </div>
     </div>
@@ -14,25 +79,49 @@
     <div class="row g-4">
         {% for quiz in quizzes %}
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm {% if quiz.is_unique %}quiz-card-unique{% endif %}">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">{{ quiz.title }}</h5>
-                    <p class="card-text text-muted">
+                    {% if quiz.is_unique %}
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="ai-badge">
+                            <i class="fas fa-robot me-1"></i>AI Generated
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <h5 class="card-title {% if not quiz.is_unique %}text-primary{% endif %}">
+                        {{ quiz.title }}
+                    </h5>
+
+                    <p class="card-text {% if not quiz.is_unique %}text-muted{% endif %}">
+                        {% if quiz.is_unique %}
+                        <i class="fas fa-brain me-1"></i>
+                        <span class="badge bg-light text-primary">EduAI</span>
+                        {% else %}
                         <i class="fas fa-question-circle me-1"></i> {{ quiz.questions|length }} ta savol
+                        {% endif %}
                     </p>
-                    <p class="text-muted small">
+
+                    <p class="{% if not quiz.is_unique %}text-muted{% endif %} small">
                         <i class="fas fa-clock me-1"></i> {{ quiz.created_at.strftime('%d.%m.%Y') }}
                     </p>
+
+                    {% if quiz.is_unique %}
+                    <a href="{{ url_for('take_quiz', id=quiz.id) }}" class="btn btn-light w-100">
+                        <i class="fas fa-play me-2"></i>Unique Testni Boshlash
+                    </a>
+                    {% else %}
                     <a href="{{ url_for('take_quiz', id=quiz.id) }}" class="btn btn-outline-primary w-100">
                         Boshlash <i class="fas fa-arrow-right ms-1"></i>
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% else %}
         <div class="col-12">
             <div class="alert alert-info">
-                Hozircha testlar mavjud emas.
+                <i class="fas fa-info-circle me-2"></i>Hozircha testlar mavjud emas.
             </div>
         </div>
         {% endfor %}

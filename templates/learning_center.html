@@ -1,612 +1,177 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O'quv Markazi - EDUAI Pro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .learning-hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            color: white;
-        }
-        .subject-card {
-            transition: all 0.3s ease;
-            border: 3px solid transparent;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        .subject-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            border-color: #007bff;
-        }
-        .subject-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 2rem;
-        }
-        .math-icon { 
-            background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%); 
-        }
-        .physics-icon { 
-            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); 
-        }
-        .english-icon { 
-            background: linear-gradient(135deg, #FF9A8B 0%, #FF6B6B 100%); 
-        }
-        .cs-icon { 
-            background: linear-gradient(135deg, #92FE9D 0%, #00C9FF 100%); 
-        }
-        .bio-icon { 
-            background: linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%); 
-        }
-        .chem-icon { 
-            background: linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%); 
-        }
-        .history-icon { 
-            background: linear-gradient(135deg, #D4FC79 0%, #96E6A1 100%); 
-        }
-        .language-icon { 
-            background: linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%); 
-        }
-        .geography-icon { 
-            background: linear-gradient(135deg, #FF9A8B 0%, #FECFEF 100%); 
-        }
-        .literature-icon { 
-            background: linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%); 
-        }
-        .quick-stats {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-        }
-        .feature-card {
-            border: none;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .feature-card.border-primary { 
-            border: 2px solid #007bff; 
-        }
-        .feature-card.border-success { 
-            border: 2px solid #28a745; 
-        }
-        .feature-card.border-info { 
-            border: 2px solid #17a2b8; 
-        }
-        .resource-card {
-            border: 2px dashed #dee2e6;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-        }
-        .resource-card:hover {
-            border-color: #007bff;
-            background-color: rgba(0,123,255,0.05);
-        }
-        .level-indicator {
-            width: 100%;
-            height: 4px;
-            background: #e9ecef;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .level-progress {
-            height: 100%;
-            border-radius: 2px;
-        }
-        .hero-graphic {
-            opacity: 0.7;
-        }
-        @media (max-width: 768px) {
-            .subject-card {
-                margin-bottom: 1rem;
-            }
-            .learning-hero {
-                text-align: center;
-            }
-            .hero-graphic {
-                display: none;
-            }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-robot me-2"></i>EDUAI Pro
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/dashboard">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+{% extends "base.html" %}
+
+{% block title %}O'quv Markazi - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .learning-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        color: white;
+    }
+
+    .subject-card {
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .subject-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: #007bff;
+    }
+
+    .subject-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+    }
+
+    /* Dynamic gradients for icons */
+    .math-icon {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+    }
+
+    .physics-icon {
+        background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    }
+
+    .english-icon {
+        background: linear-gradient(135deg, #FF9A8B 0%, #FF6B6B 100%);
+    }
+
+    .cs-icon {
+        background: linear-gradient(135deg, #92FE9D 0%, #00C9FF 100%);
+    }
+
+    .bio-icon {
+        background: linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%);
+    }
+
+    .chem-icon {
+        background: linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%);
+    }
+
+    .history-icon {
+        background: linear-gradient(135deg, #D4FC79 0%, #96E6A1 100%);
+    }
+
+    .language-icon {
+        background: linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="learning-hero shadow-lg overflow-hidden">
+            <div class="row align-items-center py-5 px-4">
+                <div class="col-lg-8">
+                    <h1 class="display-5 fw-bold text-white mb-3">
+                        <i class="fas fa-graduation-cap me-3"></i>O'quv Markazi
+                    </h1>
+                    <p class="lead mb-4 opacity-90">
+                        O'z bilimingizni AI yordamida oshiring. Har bir fan bo'yicha interaktiv darslar va amaliyotlar.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-white text-primary p-2 px-3 shadow-sm">
+                            <i class="fas fa-book me-1"></i>{{ subjects|length }} ta Fan
+                        </span>
+                        <span class="badge bg-white text-success p-2 px-3 shadow-sm">
+                            <i class="fas fa-chart-line me-1"></i>{{ total_progress }}% Progress
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <i class="fas fa-brain fa-8x opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h4 class="fw-bold mb-4">Mavjud Fanlar</h4>
+    </div>
+    <div class="col-md-4">
+        <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden border">
+            <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="subjectSearch" class="form-control border-0 py-2" placeholder="Fanlarni qidirish...">
+        </div>
+    </div>
+</div>
+
+<div class="row g-4" id="subjectsGrid">
+    {% for subject in subjects %}
+    <div class="col-lg-4 col-md-6 subject-card-item" data-name="{{ subject.name }}">
+        <div class="card subject-card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="subject-icon text-white
+                        {% if 'matematika' in subject.name.lower() %}math-icon
+                        {% elif 'fizika' in subject.name.lower() %}physics-icon
+                        {% elif 'ingliz' in subject.name.lower() %}english-icon
+                        {% elif 'informatika' in subject.name.lower() %}cs-icon
+                        {% elif 'kimyo' in subject.name.lower() %}chem-icon
+                        {% elif 'biologiya' in subject.name.lower() %}bio-icon
+                        {% elif 'tarix' in subject.name.lower() %}history-icon
+                        {% else %}language-icon{% endif %}">
+                        <i class="fas 
+                            {% if 'matematika' in subject.name.lower() %}fa-calculator
+                            {% elif 'fizika' in subject.name.lower() %}fa-atom
+                            {% elif 'ingliz' in subject.name.lower() %}fa-language
+                            {% elif 'informatika' in subject.name.lower() %}fa-laptop-code
+                            {% else %}fa-book{% endif %}"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">{{ subject.name }}</h5>
+                        <small class="text-muted">12 ta dars • 5 ta test</small>
+                    </div>
+                </div>
+
+                <p class="text-muted small mb-4">{{ subject.description or "Ushbu fan bo'yicha barcha kerakli
+                    materiallar va amaliy mashqlar to'plami." }}</p>
+
+                {% set progress = subject_progress.get(subject.id, 0) %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">O'zlashtirish</small>
+                        <small class="fw-bold">{{ progress }}%</small>
+                    </div>
+                    <div class="progress" style="height: 6px; border-radius: 10px;">
+                        <div class="progress-bar {% if progress >= 80 %}bg-success{% elif progress >= 40 %}bg-primary{% else %}bg-warning{% endif %}"
+                            role="progressbar" style="width: {{ progress }}%"></div>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('start_learning', subject_code=subject.code) }}"
+                    class="btn btn-primary w-100 rounded-pill py-2 shadow-sm">
+                    <i class="fas fa-play me-2"></i>Darsni Boshlash
                 </a>
-                <a class="nav-link active" href="/learning_center">
-                    <i class="fas fa-graduation-cap me-1"></i>O'quv Markazi
-                </a>
-                <a class="nav-link" href="/test_center">
-                    <i class="fas fa-file-alt me-1"></i>Test Markazi
-                </a>
-                <a class="nav-link" href="/profile">
-                    <i class="fas fa-user me-1"></i>Profil
-                </a>
             </div>
         </div>
-    </nav>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
 
-    <main class="container mt-4">
-        <!-- Hero Section -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="learning-hero">
-                    <div class="row align-items-center py-5">
-                        <div class="col-lg-8">
-                            <div class="px-4">
-                                <h1 class="display-5 fw-bold text-white mb-3">
-                                    <i class="fas fa-graduation-cap me-3"></i>O'quv Markazi
-                                </h1>
-                                <p class="lead mb-4 opacity-90">
-                                    Sun'iy intellekt asosidagi shaxsiylashtirilgan o'quv platformasi. 
-                                    Har bir fan uchun moslashtirilgan darslar, interaktiv mashqlar va real vaqtda progress kuzatish.
-                                </p>
-                                <div class="d-flex flex-wrap gap-3">
-                                    <span class="badge bg-light text-dark">
-                                        <i class="fas fa-book me-1"></i>{{ subjects|length }} ta Fan
-                                    </span>
-                                    <span class="badge bg-light text-dark">
-                                        <i class="fas fa-chart-line me-1"></i>{{ total_progress }}% O'rtacha Progress
-                                    </span>
-                                    <span class="badge bg-light text-dark">
-                                        <i class="fas fa-star me-1"></i>3 Darajali Tizim
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 text-center">
-                            <div class="hero-graphic">
-                                <i class="fas fa-brain fa-8x text-white"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Overview -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-3 mb-3">
-                                <div class="quick-stats">
-                                    <h3 class="text-primary mb-1">{{ total_progress }}%</h3>
-                                    <small class="text-muted">Umumiy Progress</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="quick-stats">
-                                    <h3 class="text-success mb-1">{{ completed_subjects }}</h3>
-                                    <small class="text-muted">Yaxshi O'zlashtirilgan</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="quick-stats">
-                                    <h3 class="text-warning mb-1">{{ in_progress_subjects }}</h3>
-                                    <small class="text-muted">Jarayonda</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="quick-stats">
-                                    <h3 class="text-info mb-1">{{ not_started_subjects }}</h3>
-                                    <small class="text-muted">Boshlanmagan</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fanlar Grid -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-primary">
-                        <i class="fas fa-book-open me-2"></i>Barcha Fanlar
-                    </h3>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-primary btn-sm active">Barchasi</button>
-                        <button class="btn btn-outline-primary btn-sm">Yuqori Progress</button>
-                        <button class="btn btn-outline-primary btn-sm">Yangi</button>
-                    </div>
-                </div>
-
-                <div class="row g-4">
-                    {% for subject_name in subjects %}
-                    {% set progress = subject_progress[subject_name] %}
-                    {% set subject_code = subject_name.lower().replace(' ', '_') %}
-                    
-                    <!-- Progress rangini aniqlash -->
-                    {% if progress >= 70 %}
-                        {% set progress_color = 'success' %}
-                        {% set level_text = 'Yuqori' %}
-                    {% elif progress >= 30 %}
-                        {% set progress_color = 'warning' %}
-                        {% set level_text = 'O\'rta' %}
-                    {% else %}
-                        {% set progress_color = 'danger' %}
-                        {% set level_text = 'Boshlang\'ich' %}
-                    {% endif %}
-
-                    <!-- Icon aniqlash -->
-                    {% if 'matematika' in subject_code %}
-                        {% set icon_class = 'math-icon' %}
-                        {% set icon = 'fa-calculator' %}
-                        {% set description = 'Sonlar, algebra, geometriya va hisoblash. Matematik mantik va masala yechish ko\'nikmalari.' %}
-                    {% elif 'fizika' in subject_code %}
-                        {% set icon_class = 'physics-icon' %}
-                        {% set icon = 'fa-atom' %}
-                        {% set description = 'Tabiat qonunlari va fizikaviy hodisalar. Mexanika, termodinamika va elektromagnetizm.' %}
-                    {% elif 'ingliz' in subject_code %}
-                        {% set icon_class = 'english-icon' %}
-                        {% set icon = 'fa-language' %}
-                        {% set description = 'Grammatika, lug\'at va nutq ko\'nikmalari. Ingliz tilida erkin muloqot qilish imkoniyati.' %}
-                    {% elif 'informatika' in subject_code %}
-                        {% set icon_class = 'cs-icon' %}
-                        {% set icon = 'fa-laptop-code' %}
-                        {% set description = 'Dasturlash, algoritmlar va texnologiyalar. Python, JavaScript va ma\'lumotlar strukturasi.' %}
-                    {% elif 'biologiya' in subject_code %}
-                        {% set icon_class = 'bio-icon' %}
-                        {% set icon = 'fa-dna' %}
-                        {% set description = 'Tirik organizmlar va hayot jarayonlari. Genetika, evolyutsiya va ekologiya.' %}
-                    {% elif 'kimyo' in subject_code %}
-                        {% set icon_class = 'chem-icon' %}
-                        {% set icon = 'fa-flask' %}
-                        {% set description = 'Moddalar va ularning o\'zgarishlari. Atomlar, molekulalar va kimyoviy reaksiyalar.' %}
-                    {% elif 'tarix' in subject_code %}
-                        {% set icon_class = 'history-icon' %}
-                        {% set icon = 'fa-landmark' %}
-                        {% set description = 'Tarixiy voqealar va madaniyat. Dunyo va mahalliy tarix.' %}
-                    {% elif 'ona tili' in subject_code %}
-                        {% set icon_class = 'language-icon' %}
-                        {% set icon = 'fa-book' %}
-                        {% set description = 'Ona tili grammatikasi va adabiyot. Nutq madaniyati va yozma ifoda.' %}
-                    {% elif 'geografiya' in subject_code %}
-                        {% set icon_class = 'geography-icon' %}
-                        {% set icon = 'fa-globe-asia' %}
-                        {% set description = 'Yer sharining fizik va iqtisodiy geografiyasi. Tabiiy resurslar va muhit.' %}
-                    {% elif 'adabiyot' in subject_code %}
-                        {% set icon_class = 'literature-icon' %}
-                        {% set icon = 'fa-pen-fancy' %}
-                        {% set description = 'Adabiy asarlar va adabiy tahlil. She\'riyat, nasr va dramaturgiya.' %}
-                    {% else %}
-                        {% set icon_class = 'math-icon' %}
-                        {% set icon = 'fa-book' %}
-                        {% set description = 'Ushbu fan bo\'yicha darslar va materiallar.' %}
-                    {% endif %}
-
-                    <div class="col-xl-4 col-lg-6 col-md-6">
-                        <div class="card subject-card h-100">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-start mb-3">
-                                    <div class="subject-icon {{ icon_class }} me-3">
-                                        <i class="fas {{ icon }} text-white"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="card-title mb-1">{{ subject_name }}</h5>
-                                        <div class="d-flex align-items-center">
-                                            <small class="text-muted me-2">Progress:</small>
-                                            <div class="flex-grow-1">
-                                                <div class="progress" style="height: 6px;">
-                                                    <div class="progress-bar bg-{{ progress_color }}" style="width: {{ progress }}%"></div>
-                                                </div>
-                                            </div>
-                                            <small class="text-muted ms-2">{{ progress }}%</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-3">
-                                    {{ description }}
-                                </p>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <small class="text-muted">O'quv darajasi:</small>
-                                        <small class="fw-bold text-{{ progress_color }}">{{ level_text }}</small>
-                                    </div>
-                                    <div class="level-indicator">
-                                        <div class="level-progress bg-{{ progress_color }}" style="width: {{ progress }}%"></div>
-                                    </div>
-                                </div>
-                                <div class="row g-2 mb-3">
-                                    <div class="col-4">
-                                        <a href="/start_learning/{{ subject_code }}?level=beginner" class="btn btn-outline-success w-100 btn-sm">
-                                            <i class="fas fa-seedling me-1"></i>Boshlang'ich
-                                        </a>
-                                    </div>
-                                    <div class="col-4">
-                                        <a href="/start_learning/{{ subject_code }}?level=intermediate" class="btn btn-outline-warning w-100 btn-sm">
-                                            <i class="fas fa-chart-line me-1"></i>O'rta
-                                        </a>
-                                    </div>
-                                    <div class="col-4">
-                                        <a href="/start_learning/{{ subject_code }}?level=advanced" class="btn btn-outline-danger w-100 btn-sm">
-                                            <i class="fas fa-rocket me-1"></i>Murakkab
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <a href="/start_learning/{{ subject_code }}" class="btn btn-primary">
-                                        <i class="fas fa-play-circle me-2"></i>Darsni Boshlash
-                                    </a>
-                                    <div class="btn-group">
-                                        <a href="/learning_center?subject={{ subject_code }}" class="btn btn-outline-primary">
-                                            <i class="fas fa-file-alt me-2"></i>Test
-                                        </a>
-                                        <button class="btn btn-outline-secondary">
-                                            <i class="fas fa-download me-2"></i>Materiallar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Qo'shimcha Imkoniyatlar -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <h3 class="text-primary mb-4">
-                    <i class="fas fa-star me-2"></i>Maxsus Imkoniyatlar
-                </h3>
-                
-                <div class="row g-4">
-                    <!-- AI O'qituvchi -->
-                    <div class="col-md-4">
-                        <div class="card feature-card border-primary">
-                            <div class="card-body text-center p-4">
-                                <div class="feature-icon text-primary mb-3">
-                                    <i class="fas fa-robot fa-3x"></i>
-                                </div>
-                                <h5 class="card-title">AI O'qituvchi</h5>
-                                <p class="text-muted small mb-3">
-                                    Shaxsiylashtirilgan darslar va maslahatlar. AI sizning darajangizga mos kontent tayyorlaydi.
-                                </p>
-                                <a href="/ai_tutor" class="btn btn-outline-primary">
-                                    <i class="fas fa-comments me-2"></i>Suhbatlashish
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Interaktiv Mashqlar -->
-                    <div class="col-md-4">
-                        <div class="card feature-card border-success">
-                            <div class="card-body text-center p-4">
-                                <div class="feature-icon text-success mb-3">
-                                    <i class="fas fa-puzzle-piece fa-3x"></i>
-                                </div>
-                                <h5 class="card-title">Interaktiv Mashqlar</h5>
-                                <p class="text-muted small mb-3">
-                                    O'yinlashtirilgan mashqlar va viktorinalar. Qiziqarli usulda bilimingizni mustahkamlang.
-                                </p>
-                                <button class="btn btn-outline-success">
-                                    <i class="fas fa-play me-2"></i>Mashq Qilish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Progress Kuzatish -->
-                    <div class="col-md-4">
-                        <div class="card feature-card border-info">
-                            <div class="card-body text-center p-4">
-                                <div class="feature-icon text-info mb-3">
-                                    <i class="fas fa-chart-line fa-3x"></i>
-                                </div>
-                                <h5 class="card-title">Detal Progress</h5>
-                                <p class="text-muted small mb-3">
-                                    Batafsil statistikalar va tahlillar. O'z progressingizni har tomondan kuzating.
-                                </p>
-                                <a href="/progress_analytics" class="btn btn-outline-info">
-                                    <i class="fas fa-chart-bar me-2"></i>Statistikani Ko'rish
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- O'quv Resurslari -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-0">
-                        <h4 class="card-title mb-0">
-                            <i class="fas fa-toolbox me-2 text-warning"></i>Qo'shimcha O'quv Resurslari
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-4">
-                            <!-- Video Darslar -->
-                            <div class="col-md-3">
-                                <div class="card resource-card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="resource-icon text-primary mb-3">
-                                            <i class="fas fa-video fa-2x"></i>
-                                        </div>
-                                        <h6>Video Darslar</h6>
-                                        <p class="text-muted small mb-3">Tushuntirishli video darslar to'plami</p>
-                                        <div class="d-grid">
-                                            <button class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-eye me-1"></i>Ko'rish
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- PDF Qo'llanmalar -->
-                            <div class="col-md-3">
-                                <div class="card resource-card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="resource-icon text-danger mb-3">
-                                            <i class="fas fa-file-pdf fa-2x"></i>
-                                        </div>
-                                        <h6>PDF Qo'llanmalar</h6>
-                                        <p class="text-muted small mb-3">Yuklab olish uchun qo'llanmalar</p>
-                                        <div class="d-grid">
-                                            <button class="btn btn-outline-danger btn-sm">
-                                                <i class="fas fa-download me-1"></i>Yuklash
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Interaktiv Testlar -->
-                            <div class="col-md-3">
-                                <div class="card resource-card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="resource-icon text-success mb-3">
-                                            <i class="fas fa-gamepad fa-2x"></i>
-                                        </div>
-                                        <h6>Interaktiv Testlar</h6>
-                                        <p class="text-muted small mb-3">O'yin shaklidagi testlar</p>
-                                        <div class="d-grid">
-                                            <button class="btn btn-outline-success btn-sm">
-                                                <i class="fas fa-play me-1"></i>O'ynash
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Lug'atlar -->
-                            <div class="col-md-3">
-                                <div class="card resource-card h-100">
-                                    <div class="card-body text-center p-4">
-                                        <div class="resource-icon text-info mb-3">
-                                            <i class="fas fa-book fa-2x"></i>
-                                        </div>
-                                        <h6>Lug'atlar</h6>
-                                        <p class="text-muted small mb-3">Fanlar bo'yicha terminlar lug'ati</p>
-                                        <div class="d-grid">
-                                            <button class="btn btn-outline-info btn-sm">
-                                                <i class="fas fa-search me-1"></i>Qidirish
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
-            <p>&copy; 2025 EDUAI Pro - AI O'qituvchi Tizimi. Barcha huquqlar himoyalangan.</p>
-        </div>
-    </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Progress animatsiyasi
-            const progressBars = document.querySelectorAll('.progress-bar');
-            progressBars.forEach(bar => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                    bar.style.transition = 'width 1s ease-in-out';
-                }, 100);
-            });
-
-            // Fan kartalariga hover effekt
-            const subjectCards = document.querySelectorAll('.subject-card');
-            subjectCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px)';
-                });
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-
-            // Daraja tugmalari uchun aktiv holat
-            const levelButtons = document.querySelectorAll('.filter-buttons .btn');
-            levelButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    levelButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-
-            // API chaqiruvlari
-            async function loadQuestions(subject) {
-                try {
-                    const response = await fetch(`/api/get_questions/${subject}`);
-                    const questions = await response.json();
-                    console.log('Savollar yuklandi:', questions);
-                } catch (error) {
-                    console.error('Savollarni yuklashda xatolik:', error);
-                }
-            }
-
-            async function submitTest(data) {
-                try {
-                    const response = await fetch('/api/submit_test', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    const result = await response.json();
-                    console.log('Test natijasi:', result);
-                } catch (error) {
-                    console.error('Test yuborishda xatolik:', error);
-                }
-            }
-
-            async function sendVoiceQuery(text) {
-                try {
-                    const response = await fetch('/api/voice_query', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({text: text})
-                    });
-                    const result = await response.json();
-                    console.log('Ovoz javobi:', result);
-                } catch (error) {
-                    console.error('Ovoz so\'rovida xatolik:', error);
-                }
-            }
-
-            // Namuna chaqiruvlar
-            // loadQuestions('matematika');
+{% block extra_js %}
+<script>
+    document.getElementById('subjectSearch').addEventListener('input', function (e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.subject-card-item').forEach(card => {
+            const name = card.dataset.name.toLowerCase();
+            card.style.display = name.includes(term) ? 'block' : 'none';
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

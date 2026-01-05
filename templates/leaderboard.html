@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white p-4">
+                <h3 class="card-title text-center mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>Yetakchilar Jadvali
+                </h3>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Tabs -->
+                <ul class="nav nav-pills mb-4" id="leaderboardTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="students-tab" data-bs-toggle="pill"
+                            data-bs-target="#students" type="button" role="tab">
+                            <i class="fas fa-user-graduate me-2"></i>O'quvchilar
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="teachers-tab" data-bs-toggle="pill" data-bs-target="#teachers"
+                            type="button" role="tab">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>O'qituvchilar
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="leaderboardTabContent">
+                    <!-- Students Tab -->
+                    <div class="tab-pane fade show active" id="students" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0 text-muted" style="width: 60px;">O'rin</th>
+                                        <th class="border-0 text-muted">Foydalanuvchi</th>
+                                        <th class="border-0 text-muted text-center">Daraja</th>
+                                        <th class="border-0 text-muted text-center">Testlar</th>
+                                        <th class="border-0 text-muted text-end">Jami Ball</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leader in student_leaders %}
+                                    <tr
+                                        class="{% if leader.username == current_user.username %}table-primary border-primary border-2{% endif %}">
+                                        <td class="text-center fw-bold text-secondary">
+                                            {% if leader.rank == 1 %}
+                                            <i class="fas fa-medal text-warning fa-lg"></i>
+                                            {% elif leader.rank == 2 %}
+                                            <i class="fas fa-medal text-secondary fa-lg"></i>
+                                            {% elif leader.rank == 3 %}
+                                            <i class="fas fa-medal text-danger fa-lg"></i>
+                                            {% else %}
+                                            {{ leader.rank }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="user-trigger" data-user-id="{{ leader.id }}"
+                                            style="cursor: pointer;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 40px; height: 40px; border-radius: 50%;">
+                                                    {% if leader.avatar %}
+                                                    <img src="{{ leader.avatar }}" alt=""
+                                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                                    {% else %}
+                                                    {{ leader.full_name[0] if leader.full_name else leader.username[0] |
+                                                    upper }}
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold">
+                                                        {{ leader.full_name or leader.username }}
+                                                        {% if leader.username == current_user.username %}
+                                                        <span class="badge bg-primary ms-1">Siz</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">@{{ leader.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill bg-info text-white px-3">Level {{
+                                                leader.level }}</span>
+                                        </td>
+                                        <td class="text-center fw-semibold text-secondary">
+                                            {{ leader.tests_taken }}
+                                        </td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0 fw-bold text-success">{{ leader.points }}</h5>
+                                            <small class="text-muted">ball</small>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-users-slash fa-3x mb-3 text-secondary"></i>
+                                            <p class="mb-0">Hozircha studentlar yo'q.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Teachers Tab -->
+                    <div class="tab-pane fade" id="teachers" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0 text-muted" style="width: 60px;">O'rin</th>
+                                        <th class="border-0 text-muted">O'qituvchi</th>
+                                        <th class="border-0 text-muted text-center">Unvon</th>
+                                        <th class="border-0 text-muted text-center">Guruhlar</th>
+                                        <th class="border-0 text-muted text-end">O'quvchilar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leader in teacher_leaders %}
+                                    <tr
+                                        class="{% if leader.username == current_user.username %}table-primary border-primary border-2{% endif %}">
+                                        <td class="text-center fw-bold text-secondary">
+                                            {% if leader.rank == 1 %}
+                                            <i class="fas fa-trophy text-warning fa-lg"></i>
+                                            {% elif leader.rank == 2 %}
+                                            <i class="fas fa-trophy text-secondary fa-lg"></i>
+                                            {% elif leader.rank == 3 %}
+                                            <i class="fas fa-trophy text-danger fa-lg"></i>
+                                            {% else %}
+                                            {{ leader.rank }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="user-trigger" data-user-id="{{ leader.id }}"
+                                            style="cursor: pointer;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-success text-white me-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 40px; height: 40px; border-radius: 50%;">
+                                                    {% if leader.avatar %}
+                                                    <img src="{{ leader.avatar }}" alt=""
+                                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                                    {% else %}
+                                                    {{ leader.full_name[0] if leader.full_name else leader.username[0] |
+                                                    upper }}
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold">
+                                                        {{ leader.full_name or leader.username }}
+                                                        {% if leader.username == current_user.username %}
+                                                        <span class="badge bg-primary ms-1">Siz</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">@{{ leader.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill bg-warning text-dark px-3">{{
+                                                leader.rank_title }}</span>
+                                        </td>
+                                        <td class="text-center fw-semibold text-secondary">
+                                            {{ leader.groups_count }} ta
+                                        </td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0 fw-bold text-primary">{{ leader.students_count }}</h5>
+                                            <small class="text-muted">o'quvchi</small>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-users-slash fa-3x mb-3 text-secondary"></i>
+                                            <p class="mb-0">Hozircha o'qituvchilar yo'q.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-light p-3">
+                <div class="d-flex align-items-center justify-content-between text-muted small">
+                    <span><i class="fas fa-info-circle me-1"></i> Reyting har bir test natijasidan so'ng
+                        yangilanadi.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mini Profile Modal -->
+<div class="modal fade" id="miniProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4" id="miniProfileContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.user-trigger').forEach(el => {
+        el.addEventListener('click', async () => {
+            const userId = el.dataset.userId;
+            const modalElement = document.getElementById('miniProfileModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const contentArea = document.getElementById('miniProfileContent');
+
+            contentArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+            modal.show();
+
+            try {
+                const resp = await fetch(`/api/user/mini-profile/${userId}`);
+                const data = await resp.json();
+
+                if (data.error) throw new Error(data.error);
+
+                let btnHtml = '';
+                const currentUserId = '{{ current_user.id }}';
+            const currentUserRole = '{{ current_user.role }}';
+
+            if (data.role === 'teacher' && data.id != currentUserId && currentUserRole === 'student') {
+                if (data.request_status === 'pending') {
+                    btnHtml = '<button class="btn btn-secondary w-100 rounded-pill mt-3" disabled>So\'rov kutilmoqda</button>';
+                } else if (data.request_status === 'accepted') {
+                    btnHtml = '<button class="btn btn-success w-100 rounded-pill mt-3" disabled><i class="fas fa-check me-2"></i>O\'quvchisiz</button>';
+                } else {
+                    btnHtml = `<button class="btn btn-primary w-100 rounded-pill mt-3" onclick="requestEnroll(${data.id})">O'quvchi bo'lish</button>`;
+                }
+            }
+
+            contentArea.innerHTML = `
+                <div class="text-center mb-4">
+                    <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+                    <div class="avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #eee;">
+                        ${data.avatar ? `<img src="${data.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div class="h-100 d-flex align-items-center justify-content-center bg-primary text-white h2 mb-0">${data.full_name[0]}</div>`}
+                    </div>
+                    <h4 class="fw-bold mb-1">${data.full_name}</h4>
+                    <p class="text-muted small mb-3">@${data.username} • ${data.role === 'teacher' ? data.teacher_rank : data.rank}</p>
+                    <p class="small text-secondary mb-3">${data.bio || "Ma'lumot berilmagan."}</p>
+                </div>
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded-3">
+                            <h6 class="fw-bold mb-0">${data.stats.tests}</h6>
+                            <small class="text-muted" style="font-size: 0.7rem;">Testlar</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded-3">
+                            <h6 class="fw-bold mb-0">${data.stats.avg_score}%</h6>
+                            <small class="text-muted" style="font-size: 0.7rem;">O'rtacha</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded-3">
+                            <h6 class="fw-bold mb-0">${data.stats.progress}%</h6>
+                            <small class="text-muted" style="font-size: 0.7rem;">Progress</small>
+                        </div>
+                    </div>
+                </div>
+                ${btnHtml}
+            `;
+        } catch (e) {
+            contentArea.innerHTML = `<div class="alert alert-danger">Xatolik: ${e.message}</div>`;
+        }
+    });
+});
+
+    async function requestEnroll(teacherId) {
+        if (!confirm("O'qituvchiga o'quvchi bo'lish uchun so'rov yubormoqchimisiz?")) return;
+
+        try {
+            const resp = await fetch('/api/enroll/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teacher_id: teacherId })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                alert('So\'rov muvaffaqiyatli yuborildi!');
+                location.reload();
+            } else {
+                alert(data.error);
+            }
+        } catch (e) {
+            alert('Tizimda xatolik yuz berdi. Iltimos keyinroq qayta urinib ko\'ring.');
+        }
+    }
+</script>
+{% endblock %}

@@ -4,58 +4,69 @@
 
 {% block extra_css %}
 <style>
-.analytics-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 20px;
-}
-.stats-card {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-    padding: 1rem;
-    margin: 0.5rem 0;
-}
-.progress-card {
-    border: none;
-    border-radius: 15px;
-    transition: all 0.3s ease;
-}
-.progress-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-}
-.subject-progress {
-    height: 8px;
-}
-.timeline-item {
-    border-left: 3px solid #007bff;
-    padding-left: 1rem;
-    margin-bottom: 1.5rem;
-}
-.timeline-date {
-    font-size: 0.9rem;
-    color: #6c757d;
-}
-.performance-badge {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.8rem;
-}
-.chart-container {
-    position: relative;
-    height: 300px;
-}
-.insight-card {
-    border-left: 4px solid #28a745;
-    background: #f8fff9;
-}
-.improvement-card {
-    border-left: 4px solid #ffc107;
-    background: #fffbf0;
-}
-.filter-btn {
-    border-radius: 20px;
-    margin: 0.25rem;
-}
+    .analytics-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+    }
+
+    .stats-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+    }
+
+    .progress-card {
+        border: none;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .progress-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .subject-progress {
+        height: 8px;
+    }
+
+    .timeline-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .performance-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.8rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    .insight-card {
+        border-left: 4px solid #28a745;
+        background: #f8fff9;
+    }
+
+    .improvement-card {
+        border-left: 4px solid #ffc107;
+        background: #fffbf0;
+    }
+
+    .filter-btn {
+        border-radius: 20px;
+        margin: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -71,7 +82,7 @@
                             <i class="fas fa-chart-line me-3"></i>Progress Tahlili
                         </h1>
                         <p class="lead mb-4 opacity-90">
-                            Batafsil statistikalar, tahlillar va AI tavsiyalari. 
+                            Batafsil statistikalar, tahlillar va AI tavsiyalari.
                             O'z bilimingizni har tomondan kuzating va rivojlangan.
                         </p>
                         <div class="d-flex flex-wrap gap-3">
@@ -88,8 +99,42 @@
                     </div>
                 </div>
                 <div class="col-lg-4 text-center">
-                    <div class="hero-graphic">
-                        <i class="fas fa-analytics fa-8x opacity-25"></i>
+                    <i class="fas fa-chart-bar fa-8x opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Statistics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-primary mb-1">{{ current_user.get_overall_progress() }}%</h3>
+                            <small class="text-muted">Umum Progress</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-success mb-1">{{ current_user.get_avg_test_score() }}%</h3>
+                            <small class="text-muted">O'rtacha Ball</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-warning mb-1">{{ current_user.get_tests_taken() }}</h3>
+                            <small class="text-muted">Testlar</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-info mb-1">{{ current_user.progress|length }}</h3>
+                            <small class="text-muted">Fanlar</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -97,309 +142,142 @@
     </div>
 </div>
 
-<div class="container">
-    <!-- Asosiy Statistikalar -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3 mb-3">
-                            <div class="stats-card">
-                                <h3 class="text-primary mb-1">{{ current_user.get_overall_progress() }}%</h3>
-                                <small class="text-muted">Umumiy Progress</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="stats-card">
-                                <h3 class="text-success mb-1">{{ current_user.get_avg_test_score() }}%</h3>
-                                <small class="text-muted">O'rtacha Test Ball</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="stats-card">
-                                <h3 class="text-warning mb-1">{{ current_user.get_tests_taken() }}</h3>
-                                <small class="text-muted">Topshirilgan Testlar</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="stats-card">
-                                <h3 class="text-info mb-1">{{ (current_user.progress|selectattr("progress_percentage", "ge", 70)|list|length) }}</h3>
-                                <small class="text-muted">Yaxshi Fanlar</small>
-                            </div>
-                        </div>
-                    </div>
+<div class="row g-4">
+    <!-- Left Panel - Charts -->
+    <div class="col-lg-8">
+        <!-- Subject Progress Chart -->
+        <div class="card progress-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>Fanlar Bo'yicha Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="subjectProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Trend Chart -->
+        <div class="card progress-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trend-up me-2 text-success"></i>Progress Trendi (Oxirgi 7 Kun)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="progressTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results Chart -->
+        <div class="card progress-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2 text-info"></i>Test Natijalari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="testResultsChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Chap Panel - Progress Diagrammalari -->
-        <div class="col-lg-8">
-            <!-- Fanlar Progressi -->
-            <div class="card progress-card mb-4">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2 text-primary"></i>Fanlar Bo'yicha Progress
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="subjectProgressChart"></canvas>
-                    </div>
-                </div>
+    <!-- Right Panel - AI Insights -->
+    <div class="col-lg-4">
+        <!-- AI Insights -->
+        <div class="card progress-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-robot me-2 text-primary"></i>AI Tahlillari
+                </h5>
             </div>
-
-            <!-- Progress Trendi -->
-            <div class="card progress-card mb-4">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-trend-up me-2 text-success"></i>Progress Trendi (Oxirgi 30 kun)
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="progressTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Test Natijalari -->
-            <div class="card progress-card">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-file-alt me-2 text-info"></i>Test Natijalari Tahlili
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="testResultsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- O'ng Panel - Tahlillar va Tavsiyalar -->
-        <div class="col-lg-4">
-            <!-- AI Tahlillari -->
-            <div class="card progress-card mb-4">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-robot me-2 text-primary"></i>AI Tahlillari
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Kuchli Tomonlar -->
-                    <div class="insight-card p-3 mb-3">
-                        <h6 class="text-success">
-                            <i class="fas fa-star me-2"></i>Kuchli Tomonlaringiz
-                        </h6>
-                        <ul class="mb-0">
-                            {% for progress in current_user.progress %}
-                                {% if progress.progress_percentage >= 80 %}
-                                    {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
-                                    {% if subject %}
-                                    <li>{{ subject.name }} ({{ progress.progress_percentage }}%)</li>
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    <!-- Takomillashtirish Kerak -->
-                    <div class="improvement-card p-3 mb-3">
-                        <h6 class="text-warning">
-                            <i class="fas fa-bullseye me-2"></i>Takomillashtirish Kerak
-                        </h6>
-                        <ul class="mb-0">
-                            {% for progress in current_user.progress %}
-                                {% if progress.progress_percentage < 50 %}
-                                    {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
-                                    {% if subject %}
-                                    <li>{{ subject.name }} ({{ progress.progress_percentage }}%)</li>
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    <!-- Tavsiyalar -->
-                    <div class="alert alert-info">
-                        <h6>
-                            <i class="fas fa-lightbulb me-2"></i>Shaxsiy Tavsiya
-                        </h6>
-                        <p class="small mb-2" id="aiRecommendation">
-                            <!-- AI tavsiyasi JavaScript orqali yuklanadi -->
-                        </p>
-                        <button class="btn btn-sm btn-outline-info" onclick="generateAITip()">
-                            <i class="fas fa-sync me-1"></i>Yangi Tavsiya
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- So'nggi Faoliyat -->
-            <div class="card progress-card mb-4">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-history me-2 text-secondary"></i>So'nggi Faoliyat
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        {% for result in test_results[:5] %}
-                        <div class="timeline-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1">{{ result.subject }}</h6>
-                                    <span class="badge performance-badge 
-                                        {% if result.score >= 80 %}bg-success
-                                        {% elif result.score >= 60 %}bg-warning
-                                        {% else %}bg-danger{% endif %}">
-                                        {{ result.score }}%
-                                    </span>
-                                </div>
-                                <small class="timeline-date">{{ result.date }}</small>
-                            </div>
-                        </div>
+            <div class="card-body">
+                <!-- Strong Subjects -->
+                <div class="insight-card p-3 mb-3">
+                    <h6 class="text-success">
+                        <i class="fas fa-star me-2"></i>Kuchli Tomonlar
+                    </h6>
+                    <ul class="mb-0 small">
+                        {% for progress in current_user.progress %}
+                        {% if progress.progress_percentage >= 70 %}
+                        {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
+                        {% if subject %}
+                        <li>{{ subject.name }} ({{ progress.progress_percentage }}%)</li>
+                        {% endif %}
+                        {% endif %}
                         {% else %}
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                            <p>Hali test natijalari mavjud emas</p>
-                        </div>
+                        <li class="text-muted">Progress kiriting!</li>
                         {% endfor %}
-                    </div>
+                    </ul>
                 </div>
-            </div>
 
-            <!-- Tez Filtrlash -->
-            <div class="card progress-card">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-filter me-2 text-info"></i>Ma'lumotlarni Filtrlash
-                    </h5>
+                <!-- Needs Improvement -->
+                <div class="improvement-card p-3 mb-3">
+                    <h6 class="text-warning">
+                        <i class="fas fa-bullseye me-2"></i>Yaxshilash Kerak
+                    </h6>
+                    <ul class="mb-0 small">
+                        {% for progress in current_user.progress %}
+                        {% if progress.progress_percentage < 50 %} {% set subject=subjects|selectattr("id", "equalto" ,
+                            progress.subject_id)|first %} {% if subject %} <li>{{ subject.name }} ({{
+                            progress.progress_percentage }}%)</li>
+                            {% endif %}
+                            {% endif %}
+                            {% else %}
+                            <li class="text-muted">Hammasi yaxshi!</li>
+                            {% endfor %}
+                    </ul>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap">
-                        <button class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all">
-                            Barchasi
-                        </button>
-                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="week">
-                            Oxirgi Hafta
-                        </button>
-                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="month">
-                            Oxirgi Oy
-                        </button>
-                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="best">
-                            Eng Yaxshilari
-                        </button>
-                    </div>
+
+                <!-- AI Recommendations -->
+                <div class="alert alert-info">
+                    <h6>
+                        <i class="fas fa-lightbulb me-2"></i>AI Tavsiya
+                    </h6>
+                    <p class="small mb-2" id="aiRecommendation"></p>
+                    <button class="btn btn-sm btn-outline-info" onclick="generateAITip()">
+                        <i class="fas fa-sync me-1"></i>Yangi Tavsiya
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Batafsil Progress Jadvali -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card progress-card">
-                <div class="card-header bg-white border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-table me-2 text-primary"></i>Batafsil Progress Jadvali
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Fan</th>
-                                    <th>Progress</th>
-                                    <th>Oxirgi Test</th>
-                                    <th>O'rtacha Ball</th>
-                                    <th>Status</th>
-                                    <th>Harakatlar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for progress in current_user.progress %}
-                                {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
-                                {% if subject %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ subject.name }}</strong>
-                                        <br>
-                                        <small class="text-muted">{{ subject.description[:50] }}...</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1 me-3">
-                                                <div class="progress subject-progress">
-                                                    <div class="progress-bar 
-                                                        {% if progress.progress_percentage >= 70 %}bg-success
-                                                        {% elif progress.progress_percentage >= 30 %}bg-warning
-                                                        {% else %}bg-danger{% endif %}" 
-                                                        style="width: {{ progress.progress_percentage }}%">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span class="text-muted">{{ progress.progress_percentage }}%</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {% set last_test = namespace(found=false) %}
-                                        {% for result in test_results %}
-                                            {% if result.subject == subject.name %}
-                                                <span class="badge bg-light text-dark">
-                                                    {{ result.score }}%
-                                                </span>
-                                                {% set last_test.found = true %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% if not last_test.found %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% set subject_avg = namespace(total=0, count=0) %}
-                                        {% for result in test_results %}
-                                            {% if result.subject == subject.name %}
-                                                {% set subject_avg.total = subject_avg.total + result.score %}
-                                                {% set subject_avg.count = subject_avg.count + 1 %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% if subject_avg.count > 0 %}
-                                            <span class="fw-bold">{{ (subject_avg.total / subject_avg.count)|round }}%</span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if progress.progress_percentage >= 70 %}
-                                            <span class="badge bg-success">A'lo</span>
-                                        {% elif progress.progress_percentage >= 50 %}
-                                            <span class="badge bg-warning">Yaxshi</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Rivojlantirish Kerak</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="/start_learning/{{ subject.code }}" class="btn btn-outline-primary">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                            <a href="/test_center?subject={{ subject.code }}" class="btn btn-outline-success">
-                                                <i class="fas fa-file-alt"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
+        <!-- Recent Activity -->
+        <div class="card progress-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2 text-secondary"></i>So'nggi Faoliyat
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for result in test_results[:5] %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ result.subject.name if result.subject else 'Test' }}</h6>
+                                <span class="badge performance-badge 
+                                    {% if result.score >= 80 %}bg-success
+                                    {% elif result.score >= 60 %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ result.score }}%
+                                </span>
+                            </div>
+                            <small class="timeline-date">{{ result.completed_at.strftime('%d.%m') }}</small>
+                        </div>
                     </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>Hali test natijalari yo'q</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -410,58 +288,49 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // AI tavsiyasini yuklash
-    generateAITip();
+    document.addEventListener('DOMContentLoaded', function () {
+        // AI tavsiyasini yuklash
+        generateAITip();
 
-    // Fanlar progress diagrammasi
-    const subjectCtx = document.getElementById('subjectProgressChart').getContext('2d');
-    const subjectData = {
-        labels: [
-            {% for progress in current_user.progress %}
-            {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
-            {% if subject %}'{{ subject.name }}',{% endif %}
-            {% endfor %}
-        ],
-        datasets: [{
-            label: 'Progress %',
-            data: [
-                {% for progress in current_user.progress %}
-                {{ progress.progress_percentage }},
-                {% endfor %}
-            ],
-            backgroundColor: [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
-            ],
-            borderWidth: 2
-        }]
-    };
+        // Subject Progress Chart
+        const subjectCtx = document.getElementById('subjectProgressChart').getContext('2d');
+        const subjectLabels = [];
+        const subjectData = [];
+
+        {% for progress in current_user.progress %}
+        {% set subject = subjects | selectattr("id", "equalto", progress.subject_id) | first %}
+        {% if subject %}
+        subjectLabels.push('{{ subject.name }}');
+        subjectData.push({{ progress.progress_percentage }});
+    {% endif %}
+    {% endfor %}
 
     new Chart(subjectCtx, {
         type: 'bar',
-        data: subjectData,
+        data: {
+            labels: subjectLabels,
+            datasets: [{
+                label: 'Progress %',
+                data: subjectData,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+                ],
+                borderWidth: 2
+            }]
+        },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.raw + '%';
-                        }
-                    }
-                }
+                legend: { display: false }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     max: 100,
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             return value + '%';
                         }
                     }
@@ -470,125 +339,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Progress trend diagrammasi (mock data)
+    // Progress Trend Chart
     const trendCtx = document.getElementById('progressTrendChart').getContext('2d');
-    const trendData = {
-        labels: ['1-hafta', '2-hafta', '3-hafta', '4-hafta'],
-        datasets: [{
-            label: 'Umumiy Progress',
-            data: [45, 52, 60, 68],
-            borderColor: '#36A2EB',
-            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    };
-
     new Chart(trendCtx, {
         type: 'line',
-        data: trendData,
+        data: {
+            labels: {{ trend_labels| tojson }},
+        datasets: [{
+            label: 'O\'rtacha Progress',
+            data: {{ trend_data| tojson }},
+        borderColor: '#36A2EB',
+        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        tension: 0.4,
+        fill: true
+            }]
+        },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function (value) {
+                        return value + '%';
                     }
                 }
             }
         }
+    }
     });
 
-    // Test natijalari diagrammasi
+    // Test Results Chart
     const testCtx = document.getElementById('testResultsChart').getContext('2d');
-    const testData = {
-        labels: [
-            {% for result in test_results[:6] %}
-            '{{ result.subject }}',
-            {% endfor %}
-        ],
-        datasets: [{
-            label: 'Test Ballari',
-            data: [
-                {% for result in test_results[:6] %}
-                {{ result.score }},
-                {% endfor %}
-            ],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.6)',
-                'rgba(54, 162, 235, 0.6)',
-                'rgba(255, 206, 86, 0.6)',
-                'rgba(75, 192, 192, 0.6)',
-                'rgba(153, 102, 255, 0.6)',
-                'rgba(255, 159, 64, 0.6)'
-            ],
-            borderWidth: 2
-        }]
-    };
+    const testLabels = [];
+    const testScores = [];
+
+    {% for result in test_results[: 6] %}
+    testLabels.push('{{ result.subject.name if result.subject else "Test" }}');
+    testScores.push({{ result.score }});
+    {% endfor %}
 
     new Chart(testCtx, {
         type: 'pie',
-        data: testData,
+        data: {
+            labels: testLabels,
+            datasets: [{
+                label: 'Test Ballari',
+                data: testScores,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderWidth: 2
+            }]
+        },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.raw + '%';
-                        }
-                    }
-                }
+                legend: { position: 'bottom' }
             }
         }
     });
-
-    // Filtrlash
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.getAttribute('data-filter');
-            filterData(filter);
-        });
-    });
-
-    function filterData(filter) {
-        console.log('Filter:', filter);
-        // Bu yerda filtrlash logikasi bo'ladi
-        // Hozircha faqat konsolga chiqaramiz
-    }
 });
 
-function generateAITip() {
-    const tips = [
-        "Matematika bo'yicha ajoyib natijalar! Keyingi bosqich sifatida trigonometriyani chuqurroq o'rganing.",
-        "Fizika fanida yaxshi progress qilyapsiz. Elektromagnetizm mavzusiga e'tibor bering.",
-        "Ingliz tilida grammatika bilimingizni mustahkamlang. Kundalik mashq qilish yordam beradi.",
-        "Dasturlash asoslarini yaxshi o'zlashtirgansiz. Endi loyihalar yaratishga o'tishingiz mumkin.",
-        "Har kuni kamida 30 daqiqa dars o'tish progressni tez oshirishga yordam beradi.",
-        "Test natijalaringizga qarab, zaif tomonlaringizga ko'proq vaqt ajrating.",
-        "Murakkab mavzularni kichik qismlarga bo'lib o'rganish samaraliroq.",
-        "O'qigan mavzularingizni takrorlash bilimmingizni mustahkamlaydi."
-    ];
-    
-    const randomTip = tips[Math.floor(Math.random() * tips.length)];
-    document.getElementById('aiRecommendation').textContent = randomTip;
-}
+    function generateAITip() {
+        const tips = [
+            "Matematika bo'yicha ajoyib natijalar! Trigonometriyani chuqurroq o'rganing.",
+            "Fizika fanida yaxshi progress. Elektromagnetizm mavzusiga e'tibor bering.",
+            "Ingliz tilida grammatika bilimingizni mustahkamlang.",
+            "Dasturlash asoslarini yaxshi o'zlashtirgansiz. Loyihalar yarating.",
+            "Har kuni 30 daqiqa dars o'tish progressni oshiradi.",
+            "Test natijalaringizga qarab, zaif tomonlaringizga vaqt ajrating.",
+            "Murakkab mavzularni kichik qismlarga bo'ling.",
+            "O'qigan mavzularingizni takrorlash bilimni mustahkamlaydi."
+        ];
+
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+        document.getElementById('aiRecommendation').textContent = randomTip;
+    }
 </script>
 {% endblock %}

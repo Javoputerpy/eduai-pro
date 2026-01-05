@@ -151,7 +151,7 @@
                             <div class="progress-bar 
                                 {% if progress.progress_percentage >= 70 %}bg-success
                                 {% elif progress.progress_percentage >= 30 %}bg-warning
-                                {% else %}bg-danger{% endif %}" style="width: {{ progress.progress_percentage }}%">
+                                {% else %}bg-danger{% endif %}" style="width: ({{ progress.progress_percentage }})%">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-2">
@@ -186,13 +186,24 @@
             <form action="{{ url_for('update_profile') }}" method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
+                        <label class="form-label">To'liq Ism (F.I.Sh)</label>
+                        <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}"
+                            placeholder="Ism Familiya">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Avatar URL</label>
+                        <input type="text" name="avatar" class="form-control" value="{{ user.avatar or '' }}"
+                            placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Bio (O'zingiz haqingizda)</label>
                         <textarea name="bio" class="form-control" rows="3">{{ user.bio or '' }}</textarea>
                     </div>
+                    <hr>
                     <div class="mb-3">
-                        <label class="form-label">Telefon Raqam</label>
-                        <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}"
-                            placeholder="+998 90 123 45 67">
+                        <label class="form-label">Yangi Parol (ixtiyoriy)</label>
+                        <input type="password" name="new_password" class="form-control"
+                            placeholder="Parolni o'zgartirish uchun kiriting">
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -128,6 +128,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    full_name = db.Column(db.String(100)) # Yangi maydon
     role = db.Column(db.String(20), default='student') # student, teacher, admin
     avatar = db.Column(db.Text)
     bio = db.Column(db.Text)
@@ -304,6 +305,8 @@ class TestResult(db.Model):
     
     # For unique quizzes: snapshot of questions and answers
     unique_questions_snapshot = db.Column(db.Text) # JSON string
+    
+    subject = db.relationship('Subject', backref='test_results')
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -342,6 +345,16 @@ class GroupMember(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     joined_at = db.Column(db.DateTime, default=datetime.now)
+
+class StudentRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending') # pending, accepted, rejected
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    student = db.relationship('User', foreign_keys=[student_id], backref='sent_enrollment_requests')
+    teacher = db.relationship('User', foreign_keys=[teacher_id], backref='received_enrollment_requests')
 
 class Assignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -478,7 +491,8 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        if User.query.filter_by(username=username).first():
+        # Case insensitive check
+        if User.query.filter(db.func.lower(User.username) == db.func.lower(username)).first():
             flash('Bu username band!', 'error')
             return render_template('register.html')
             
@@ -545,6 +559,10 @@ def logout():
 def dashboard():
     """Dashboard sahifasi - barcha ma'lumotlar DB dan"""
     
+    # Calculate total score from test results
+    test_results = TestResult.query.filter_by(user_id=current_user.id).all()
+    total_score = sum([r.score for r in test_results]) if test_results else 0
+    
     dashboard_data = {
         'overall_progress': current_user.get_overall_progress(),
         'daily_study_time': '45 daqiqa',
@@ -552,6 +570,8 @@ def dashboard():
         'total_badges': 15,
         'tests_taken': current_user.get_tests_taken(),
         'avg_test_score': current_user.get_avg_test_score(),
+'total_score': total_score,
+        'avg_score': current_user.get_avg_test_score(),
         'ai_recommendation': get_ai_recommendation(current_user.id),
         'last_lesson': get_last_lesson(current_user.id),
         'gamification': {
@@ -569,35 +589,126 @@ def dashboard():
 @app.route('/learning_center')
 @login_required
 def learning_center():
-    # Faqat DB dan ma'lumot olamiz
+    """O'quv markazi sahifasi - darslar va progress fokusida"""
+    subjects = Subject.query.all()
     user_progress = UserProgress.query.filter_by(user_id=current_user.id).all()
     
-    subjects = []
-    subject_progress_dict = {}
+    # Map progress to subject IDs
+    subject_progress_dict = {p.subject_id: p.progress_percentage for p in user_progress}
     
-    for progress in user_progress:
-        subject = Subject.query.get(progress.subject_id)
-        subjects.append(subject.name)
-        subject_progress_dict[subject.name] = progress.progress_percentage
-    
-    total_progress = sum(subject_progress_dict.values()) / len(subject_progress_dict) if subject_progress_dict else 0
-    completed_subjects = len([p for p in subject_progress_dict.values() if p >= 70])
-    in_progress_subjects = len([p for p in subject_progress_dict.values() if 30 <= p < 70])
-    not_started_subjects = len([p for p in subject_progress_dict.values() if p < 30])
+    # Global stats
+    total_progress = current_user.get_overall_progress()
+    completed_subjects = len([p for p in subject_progress_dict.values() if p >= 80])
+    in_progress_subjects = len([p for p in subject_progress_dict.values() if 0 < p < 80])
+    not_started_subjects = len(subjects) - completed_subjects - in_progress_subjects
     
     return render_template('learning_center.html', 
                          subjects=subjects, 
                          subject_progress=subject_progress_dict,
-                         total_progress=round(total_progress, 1),
+                         total_progress=total_progress,
                          completed_subjects=completed_subjects,
                          in_progress_subjects=in_progress_subjects,
                          not_started_subjects=not_started_subjects)
 
+@app.route('/test_center')
+@login_required
+def test_center():
+    """Bilim markazi sahifasi - testlar fokusida"""
+    subjects = Subject.query.all()
+    user_progress = UserProgress.query.filter_by(user_id=current_user.id).all()
+    subject_progress_dict = {p.subject_id: p.progress_percentage for p in user_progress}
+    
+    recent_results = TestResult.query.filter_by(user_id=current_user.id)\
+        .order_by(TestResult.completed_at.desc())\
+        .limit(5).all()
+        
+    return render_template('test_center.html', 
+                         subjects=subjects, 
+                         recent_results=recent_results,
+                         subject_progress=subject_progress_dict,
+                         total_progress=current_user.get_overall_progress(),
+                         completed_subjects=len([p for p in subject_progress_dict.values() if p >= 80]))
+
+@app.route('/start_learning/<subject_code>')
+@login_required
+def start_learning(subject_code):
+    """Start learning wrapper"""
+    sub = Subject.query.filter_by(code=subject_code).first()
+    if not sub:
+        # Fallback to name search
+        sub = Subject.query.filter_by(name=subject_code).first()
+        
+    if sub:
+        return redirect(url_for('subject_detail', subject=sub.name))
+    
+    flash('Fan topilmadi', 'error')
+    return redirect(url_for('learning_center'))
+
 @app.route('/achievements')
 @login_required
 def achievements():
-    badges = []  # Hozircha bo'sh, keyin badge modeli qo'shamiz
-    return render_template('achievements.html', badges=badges)
+    # 1. Barcha nishonlar ro'yxati (Static definition for now)
+    all_badges = [
+        {'id': 'first_step', 'name': 'Ilk Qadam', 'icon': 'fa-shoe-prints', 'color': 'primary', 'description': 'Birinchi testni topshirdingiz'},
+        {'id': 'high_score', 'name': 'Mergan', 'icon': 'fa-bullseye', 'color': 'danger', 'description': '100% natija qayd etdingiz'},
+        {'id': 'active_learner', 'name': 'Faol O\'quvchi', 'icon': 'fa-book-reader', 'color': 'success', 'description': '5 ta test topshirdingiz'},
+        {'id': 'consistent', 'name': 'Barqaror', 'icon': 'fa-calendar-check', 'color': 'info', 'description': '3 kun ketma-ket kirdingiz (simulyatsiya)'},
+        {'id': 'master', 'name': 'Master', 'icon': 'fa-crown', 'color': 'warning', 'description': 'Umumiy ballingiz 1000 dan oshdi'}
+    ]
+
+    # 2. Foydalanuvchi erishgan nishonlarni aniqlash
+    user_badges = []
+    tests_count = current_user.get_tests_taken()
+    total_score = sum([r.score for r in current_user.test_results]) if current_user.test_results else 0
+    has_perfect_score = any(r.score == 100 for r in current_user.test_results)
+
+    if tests_count >= 1:
+        user_badges.append('first_step')
+    if has_perfect_score:
+        user_badges.append('high_score')
+    if tests_count >= 5:
+        user_badges.append('active_learner')
+    if total_score >= 1000:
+        user_badges.append('master')
+    # consistent logikasi murakkabroq, hozircha qo'shmaymiz
+
+    # 3. Ballar tarixi (So'nggi 4 hafta)
+    # Bu yerda biz hafta bo'yicha guruhlaymiz
+    points_history_labels = []
+    points_history_data = []
+    
+    today = datetime.now()
+    for i in range(3, -1, -1):
+        start_date = today - timedelta(days=i*7 + 6)
+        end_date = today - timedelta(days=i*7)
+        label = f"{i+1}-hafta" if i > 0 else "Bu hafta"
+        
+        # Shu oralıqdagi testlarni yig'amiz
+        weekly_score = 0
+        for result in current_user.test_results:
+            if start_date.date() <= result.completed_at.date() <= end_date.date():
+                weekly_score += result.score
+        
+        points_history_labels.append(label)
+        points_history_data.append(weekly_score)
+
+    gamification = {
+        'points': total_score,
+        'level': current_user.rank or 1 # Agar rank raqam bo'lsa. String bo'lsa o'zgartirish kerak.
+    }
+    # Agar rank string bo'lsa, levelni hisoblaymiz
+    if isinstance(gamification['level'], str):
+         gamification['level'] = (total_score // 100) + 1
+
+    return render_template('achievements.html', 
+                         all_badges=all_badges, 
+                         user_badges=user_badges,
+                         gamification=gamification,
+                         points_history_labels=points_history_labels,
+                         points_history_data=points_history_data,
+                         tests_taken=tests_count,
+                         perfect_score=1 if has_perfect_score else 0)
+
 
 @app.route('/progress_analytics')
 @login_required
@@ -605,27 +716,143 @@ def progress_analytics():
     """Progress tahlili sahifasi"""
     subjects = Subject.query.all()
     
-    # Test natijalarini formatlash
-    test_results = []
-    user_results = TestResult.query.filter_by(user_id=current_user.id).all()
-    
-    for result in user_results:
-        subject = Subject.query.get(result.subject_id)
-        test_results.append({
-            'subject': subject.name,
-            'score': result.score,
-            'date': result.completed_at.strftime('%d.%m.%Y')
-        })
-    
+    # Calculate trend data (simple mock for now based on recent results)
+    import datetime
+    dates = []
+    scores = []
+    today = datetime.datetime.now()
+    for i in range(6, -1, -1):
+        d = today - datetime.timedelta(days=i)
+        dates.append(d.strftime("%Y-%m-%d"))
+        # Mock logic: average score for that day or random if no data
+        # improved: fetch actual daily averages
+        # Improved date filtering for SQLite compatibility
+        # We filter by day boundaries
+        day_start = datetime.datetime.combine(d.date(), datetime.time.min)
+        day_end = datetime.datetime.combine(d.date(), datetime.time.max)
+        
+        results = TestResult.query.filter(
+            TestResult.completed_at >= day_start,
+            TestResult.completed_at <= day_end,
+            TestResult.user_id == current_user.id
+        ).all()
+        
+        if results:
+            daily_avg = sum([r.score for r in results]) / len(results)
+        else:
+            daily_avg = 0
+            
+        scores.append(round(daily_avg))
+
+    # AI Insights (Mock)
+    ai_insights = [
+        "Sizning matematikadan o'zlashtirishingiz 15% ga oshdi.",
+        "Fizika faniga ko'proq e'tibor qaratishingiz tavsiya etiladi."
+    ]
+
+    # Fetch recent test results for the template
+    test_results = TestResult.query.filter_by(user_id=current_user.id).order_by(TestResult.completed_at.desc()).limit(10).all()
+
     return render_template('progress_analytics.html', 
                          subjects=subjects,
+                         trend_labels=dates,
+                         trend_data=scores,
+                         ai_insights=ai_insights,
                          test_results=test_results)
 
-@app.route('/ai_tutor')
+@app.route('/api/user/mini-profile/<int:user_id>')
 @login_required
-def ai_tutor_page():
-    """AI O'qituvchi sahifasi"""
-    return render_template('ai_tutor.html')
+def api_user_mini_profile(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({'error': 'Foydalanuvchi topilmadi'}), 404
+        
+    # Check if a request already exists
+    existing_request = StudentRequest.query.filter_by(
+        student_id=current_user.id,
+        teacher_id=user_id
+    ).first()
+    
+    data = {
+        'id': user.id,
+        'username': user.username,
+        'full_name': user.full_name or user.username,
+        'avatar': user.avatar,
+        'bio': user.bio or "Ushbu foydalanuvchi haqida ma'lumot yo'q.",
+        'role': user.role,
+        'rank': user.rank,
+        'joined_at': user.created_at.strftime('%Y-%m-%d'),
+        'stats': {
+            'tests': user.get_tests_taken(),
+            'avg_score': user.get_avg_test_score(),
+            'progress': user.get_overall_progress()
+        },
+        'request_status': existing_request.status if existing_request else None
+    }
+    
+    if user.role == 'teacher':
+        data['teacher_rank'] = user.teacher_rank
+        data['students_count'] = sum(len(g.members) for g in user.groups_taught)
+        
+    return jsonify(data)
+
+@app.route('/api/enroll/request', methods=['POST'])
+@login_required
+def api_request_enrollment():
+    teacher_id = request.json.get('teacher_id')
+    if not teacher_id:
+        return jsonify({'error': 'O\'qituvchi ID ko\'rsatilmadi'}), 400
+        
+    if current_user.id == teacher_id:
+        return jsonify({'error': 'O\'zingizga so\'rov yubora olmaysiz'}), 400
+        
+    existing = StudentRequest.query.filter_by(
+        student_id=current_user.id,
+        teacher_id=teacher_id
+    ).first()
+    
+    if existing:
+        return jsonify({'error': 'Siz allaqachon so\'rov yuborgansiz'}), 400
+        
+    req = StudentRequest(student_id=current_user.id, teacher_id=teacher_id)
+    db.session.add(req)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'So\'rov muvaffaqiyatli yuborildi'})
+
+@app.route('/api/enroll/handle', methods=['POST'])
+@teacher_required
+def api_handle_enrollment():
+    request_id = request.json.get('request_id')
+    action = request.json.get('action') # accept, reject
+    
+    req = StudentRequest.query.get_or_404(request_id)
+    if req.teacher_id != current_user.id:
+        return jsonify({'error': 'Ruxsat berilmagan'}), 403
+        
+    if action == 'accept':
+        req.status = 'accepted'
+        # Add to teacher's first group or create one
+        group = Group.query.filter_by(teacher_id=current_user.id).first()
+        if not group:
+            # Create a default group
+            group = Group(
+                name="Sinfim",
+                teacher_id=current_user.id,
+                code=os.urandom(4).hex().upper()
+            )
+            db.session.add(group)
+            db.session.flush()
+            
+        # Add student to group
+        member = GroupMember(group_id=group.id, student_id=req.student_id)
+        db.session.add(member)
+        
+    elif action == 'reject':
+        req.status = 'rejected'
+        
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/api/ai/chat', methods=['POST'])
 @login_required
@@ -785,47 +1012,62 @@ def settings():
 @login_required
 def leaderboard():
     """Reyting sahifasi"""
-    # Barcha foydalanuvchilarni ballari bo'yicha olamiz
-    user_scores = db.session.query(
-        User.username,
-        db.func.sum(TestResult.score).label('total_score'),
+    # 1. O'quvchilar reytingi (Faqat studentlar)
+    student_scores = db.session.query(
+        User,
+        db.func.coalesce(db.func.sum(TestResult.score), 0).label('total_score'),
         db.func.count(TestResult.id).label('tests_taken')
-    ).join(TestResult).group_by(User.id).order_by(db.desc('total_score')).all()
+    ).filter(User.role == 'student').outerjoin(TestResult, User.id == TestResult.user_id).group_by(User.id).order_by(db.desc('total_score')).all()
     
-    leaders = []
-    for i, (username, total_score, tests_taken) in enumerate(user_scores, 1):
-        # Darajani hisoblash (har 100 ball = 1 daraja)
+    student_leaders = []
+    for i, (user, total_score, tests_taken) in enumerate(student_scores, 1):
+        # Darajani hisoblash
         level = min(10, (total_score or 0) // 100 + 1) if total_score else 1
         
-        leaders.append({
-            'username': username,
+        student_leaders.append({
+            'id': user.id,
+            'username': user.username,
+            'full_name': user.full_name,
             'points': total_score or 0,
             'level': level,
             'rank': i,
-            'tests_taken': tests_taken or 0
+            'tests_taken': tests_taken or 0,
+            'avatar': user.avatar,
+            'role': user.role
         })
     
-    # Agar joriy foydalanuvchi ro'yxatda bo'lmasa, qo'shamiz
-    current_user_in_list = any(leader['username'] == current_user.username for leader in leaders)
-    if not current_user_in_list:
-        current_user_score = db.session.query(
-            db.func.sum(TestResult.score)
-        ).filter(TestResult.user_id == current_user.id).scalar() or 0
-        
-        current_user_tests = db.session.query(
-            db.func.count(TestResult.id)
-        ).filter(TestResult.user_id == current_user.id).scalar() or 0
-        
-        leaders.append({
-            'username': current_user.username,
-            'points': current_user_score,
-            'level': min(10, current_user_score // 100 + 1) if current_user_score else 1,
-            'rank': len(leaders) + 1,
-            'tests_taken': current_user_tests
+    # 2. O'qituvchilar reytingi (O'quvchilar soniga qarab)
+    teachers = User.query.filter_by(role='teacher').all()
+    teacher_leaders = []
+    
+    for teacher in teachers:
+        # O'quvchilar sonini hisoblash
+        students_count = 0
+        for group in teacher.groups_taught:
+            students_count += len(group.members)
+            
+        teacher_leaders.append({
+            'id': teacher.id,
+            'username': teacher.username,
+            'full_name': teacher.full_name,
+            'students_count': students_count,
+            'groups_count': len(teacher.groups_taught),
+            'rank_title': teacher.teacher_rank or "O'qituvchi",
+            'avatar': teacher.avatar
         })
     
+    # Sort teachers by student count desc
+    teacher_leaders.sort(key=lambda x: x['students_count'], reverse=True)
+    
+    # Add rank number
+    for i, t in enumerate(teacher_leaders, 1):
+        t['rank'] = i
+    
+    # Agar joriy foydalanuvchi student bo'lsa va ro'yxatda bo'lmasa (Pagination bo'lsa kerak edi, lekin hozircha hammasi chiqadi)
+    # Hozircha hammasini chiqaramiz, shuning uchun "current_user_in_list" shart emas.
     return render_template('leaderboard.html', 
-                         leaders=leaders,
+                         student_leaders=student_leaders,
+                         teacher_leaders=teacher_leaders,
                          current_user=current_user)
 
 @app.route('/profile')
@@ -906,14 +1148,21 @@ def api_update_profile():
 @login_required
 def update_profile():
     """Profil ma'lumotlarini yangilash (Form)"""
-    bio = request.form.get('bio')
-    phone = request.form.get('phone')
-    
-    current_user.bio = bio
-    current_user.phone = phone
-    db.session.commit()
-    
-    flash('Profil muvaffaqiyatli yangilandi!', 'success')
+    try:
+        current_user.full_name = request.form.get('full_name')
+        current_user.bio = request.form.get('bio')
+        current_user.avatar = request.form.get('avatar')
+        
+        new_password = request.form.get('new_password')
+        if new_password:
+            current_user.set_password(new_password)
+            
+        db.session.commit()
+        flash('Profil muvaffaqiyatli yangilandi!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Xatolik: {str(e)}', 'error')
+        
     return redirect(url_for('profile'))
 
 @app.route('/api/start_test/<int:subject_id>')
@@ -1148,13 +1397,13 @@ def create_teacher():
     flash('O\'qituvchi muvaffaqiyatli yaratildi!', 'success')
     return redirect(url_for('admin_users'))
 
-# Teacher Routes
 @app.route('/teacher/dashboard')
 @teacher_required
 def teacher_dashboard():
     groups = Group.query.filter_by(teacher_id=current_user.id).all()
     assignments = Assignment.query.filter(Assignment.group_id.in_([g.id for g in groups])).order_by(Assignment.created_at.desc()).limit(5).all() if groups else []
-    return render_template('teacher/dashboard.html', groups=groups, assignments=assignments, now=datetime.now())
+    pending_requests = StudentRequest.query.filter_by(teacher_id=current_user.id, status='pending').all()
+    return render_template('teacher/dashboard.html', groups=groups, assignments=assignments, pending_requests=pending_requests, now=datetime.now())
 
 @app.route('/teacher/groups/create', methods=['POST'])
 @teacher_required
@@ -1507,28 +1756,10 @@ def subject_detail(subject):
         })
     
     return render_template('subject_detail.html', 
-                         subject=subject,
                          progress=data['progress'],
                          lessons=data['lessons'],
                          hints=data['hints'],
                          leaderboard=leaderboard_data)
-
-@app.route('/test_center')
-@login_required
-def test_center():
-    """Test markazi sahifasi"""
-    if current_user.role == 'teacher':
-        flash('O\'qituvchilar test markazidan foydalana olmaydi!', 'error')
-        return redirect(url_for('teacher_dashboard'))
-
-    subjects = Subject.query.all()
-    
-    # So'nggi test natijalari (limit 3)
-    recent_results = TestResult.query.filter_by(user_id=current_user.id).order_by(TestResult.completed_at.desc()).limit(3).all()
-    
-    return render_template('test_center.html', 
-                         subjects=subjects,
-                         recent_results=recent_results)
 
 # === ADMIN EXPANSION ROUTES ===
 @app.route('/admin/announcements')
@@ -1579,10 +1810,15 @@ def delete_subject(id):
     if UserProgress.query.filter_by(subject_id=id).first():
         flash('Bu fanga bog\'liq ma\'lumotlar (progress) mavjud, o\'chirib bo\'lmaydi!', 'error')
     else:
-        db.session.delete(subject)
-        db.session.commit()
-        flash('Fan o\'chirildi', 'success')
-    return redirect(url_for('admin_content'))
+        return redirect(url_for('subject_detail', id=sub.id))
+    
+    flash('Fan topilmadi', 'error')
+    return redirect(url_for('learning_center'))
+
+@app.route('/ai-tutor')
+@login_required
+def ai_tutor_page():
+    return render_template('ai_tutor.html')
 
 # === LITERATURE (LIBRARY) SECTION ===
 @app.route('/library')
