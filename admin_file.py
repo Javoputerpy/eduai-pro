@@ -2,8 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
-from app import db
-from app import User, Subject, TestResult, UserProgress, Question
+from models import db, User, Subject, TestResult, UserProgress, Question, Quiz, Group, Message, GroupMember, Assignment
 
 # Admin Blueprint yaratish
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin', 

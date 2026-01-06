@@ -1,4 +1,5 @@
-from app import app, db, User
+from app import app
+from models import db, User
 
 def init_db():
     with app.app_context():
