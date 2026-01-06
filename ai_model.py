@@ -134,11 +134,47 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
             ]
             return random.choice(responses)
 
+    def _normalize_questions(self, questions):
+        """AI tomonidan qaytarilgan JSON kalitlarini standartlashtirish (Uzbek -> English)"""
+        if not isinstance(questions, list):
+            return []
+            
+        normalized = []
+        mapping = {
+            'savol': 'question',
+            'variantlar': 'options',
+            'to\'g\'ri_javob': 'correct_answer',
+            'togri_javob': 'correct_answer',
+            'variants': 'options',
+            'javob': 'correct_answer'
+        }
+        
+        for q in questions:
+            if not isinstance(q, dict): continue
+            
+            new_q = {}
+            # Kalitlarni xarita asosida o'zgartirish
+            for k, v in q.items():
+                norm_k = mapping.get(k.lower(), k.lower())
+                new_q[norm_k] = v
+            
+            # Majburiy maydonlar mavjudligini tekshirish
+            if 'question' not in new_q: new_q['question'] = "Savol topilmadi"
+            if 'options' not in new_q: new_q['options'] = {"A": "-", "B": "-", "C": "-", "D": "-"}
+            if 'correct_answer' not in new_q: new_q['correct_answer'] = "A"
+            
+            normalized.append(new_q)
+        return normalized
+
     def generate_quiz_from_text(self, text):
         """Matndan testlar tuzish"""
         prompt = """
         Quyidagi matndan 5 ta test savolini tuzib ber.
-        Javobni faqat va faqat JSON formatida qaytar. Hech qanday qo'shimcha so'z, tushuntirish yoki markdown (```json) ishlatma.
+        
+        MUHIM QOIDA: 
+        1. Javobni FAQAT va FAQAT JSON formatida qaytar.
+        2. Kalitlar (keys) FAQAT ingliz tilida bo'lishi shart: "question", "options", "correct_answer".
+        3. Savol va variantlar matni o'zbek tilida bo'lsin.
         
         Format aniq shunday bo'lsin:
         [
@@ -155,15 +191,13 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
         ]
         
         Matn:
-        """ + text[:2000] # Token limiti uchun qisqartirish
+        """ + text[:2000]
 
         try:
             import re
             response = self.generate_response(prompt, "O'qituvchi test tuzmoqchi")
             
-            # 1. Clean Markdown code blocks if present
             if "```" in response:
-                # Try to extract content between ```json and ``` or just ``` and ```
                 if "```json" in response:
                     response = response.split("```json")[1].split("```")[0]
                 else:
@@ -171,49 +205,36 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
             
             response = response.strip()
             
-            # 2. Try direct JSON parse
-            try:
-                return json.loads(response)
-            except json.JSONDecodeError:
-                # 3. If fail, try to extract array with Regex
-                match = re.search(r'\[.*\]', response, re.DOTALL)
-                if match:
-                    try:
-                        return json.loads(match.group(0))
-                    except:
-                        pass
-                        
-            print(f"JSON Parse Failed. Raw: {response[:100]}...")
-            return []
+            # Try to extract array with Regex
+            match = re.search(r'\[.*\]', response, re.DOTALL)
+            if match:
+                response = match.group(0)
+            
+            questions = json.loads(response)
+            return self._normalize_questions(questions)
                 
         except Exception as e:
             print(f"Quiz Generation Error: {e}")
-            # FALLBACK QUIZ (To prevent crash)
             return [
                 {
                     "question": "AI test tuza olmadi (API Xatosi). Bu namuna savol.",
                     "options": {"A": "To'g'ri", "B": "Xato", "C": "Bilmayman", "D": "Balki"},
                     "correct_answer": "A"
-                },
-                {
-                    "question": "Quyidagilardan qaysi biri Python ma'lumot turi?",
-                    "options": {"A": "echo", "B": "list", "C": "style", "D": "html"},
-                    "correct_answer": "B"
                 }
             ]
 
     def generate_unique_questions(self, topic, grade, count):
         """Mavzu va sinf bo'yicha alohida savollar tuzish"""
         prompt = f"""
-        Siz professional o'qituvchisiz. Quyidagi aniq ko'rsatmalar asosida TEST savollari tuzing:
+        Siz professional o'qituvchisiz. TEST savollari tuzing.
         
         MAVZU: {topic}
         O'QUVCHI DARAJASI: {grade}-sinf o'quvchilari.
         SAVOLLAR SONI: {count} ta.
         
-        MUHIM: Savollar FAQAT BERILGAN MAVZU ({topic}) bo'yicha bo'lishi shart! Boshqa mavzulardan (masalan, oddiy ko'paytirish agar mavzu kasr bo'lsa) foydalanmang.
-        
-        Javobni faqat va faqat JSON formatida qaytar. Hech qanday qo'shimcha so'z, tushuntirish yoki markdown ishlatma.
+        MUHIM QOIDA:
+        1. Kalitlar (keys) FAQAT ingliz tilida: "question", "options", "correct_answer".
+        2. Javobni FAQAT va FAQAT JSON formatida qaytar. Hech qanday kirish so'zlari ishlatma.
         
         Format:
         [
@@ -232,65 +253,45 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
 
         try:
             response = self.generate_response(prompt, "Unique test generation")
-            # 1. Clean Markdown code blocks if present
-            if "```" in response:
-                import re
-                match = re.search(r'\[.*\]', response, re.DOTALL)
-                if match:
-                    response = match.group(0)
-                else:
-                    # Maybe it's objects without brackets
-                    match_obj = re.search(r'\{.*\}', response, re.DOTALL)
-                    if match_obj:
-                        response = "[" + match_obj.group(0) + "]"
+            import re
+            match = re.search(r'\[.*\]', response, re.DOTALL)
+            if match:
+                response = match.group(0)
             
             response = response.strip()
-            
-            # Additional cleanup: if it doesn't start with [, try to find the first { and last }
-            if not response.startswith('['):
-                start = response.find('[')
-                end = response.rfind(']')
-                if start != -1 and end != -1:
-                    response = response[start:end+1]
-                else:
-                    # If it's a series of objects {..}, {..} wrap them
-                    if response.startswith('{'):
-                         response = "[" + response + "]"
-
-            return json.loads(response)
+            questions = json.loads(response)
+            return self._normalize_questions(questions)
         except Exception as e:
             print(f"Unique Quiz Generation Error: {e}")
-            return [
+            return self._normalize_questions([
                 {
                     "question": f"{topic} mavzusi bo'yicha {grade}-sinf uchun savol (AI Xatosi)",
                     "options": {"A": "Namuna A", "B": "Namuna B", "C": "Namuna C", "D": "Namuna D"},
                     "correct_answer": "A"
                 }
-            ] * count
+            ] * count)
 
     def grade_answer(self, question, user_answer, correct_answer=None):
         """Ochiq savol yoki kodni baholash"""
         if not user_answer or len(user_answer.strip()) < 1:
-            return 0
+            return {"score": 0, "feedback": "Javob berilmadi"}
             
         prompt = f"""
         Sen o'qituvchisan. Talabaning javobini bahola.
-        
         Savol: {question}
         To'g'ri javob namunasi: {correct_answer}
         Talaba javobi: {user_answer}
         
-        Vazifa: Talabaning javobi to'g'ri javobga ma'no jihatdan qanchalik yaqinligini foizda (0-100) va qisqa izoh bilan qaytar.
-        Javob faqat JSON formatida bo'lsin:
+        Vazifa: Talabaning javobini 0-100 oralig'ida bahola.
+        Javob FAQAT JSON formatida bo'lsin:
         {{
             "score": 85,
-            "feedback": "Javob to'g'ri, lekin to'liq emas."
+            "feedback": "Izoh"
         }}
         """
         
         try:
             response = self.generate_response(prompt, "Baholash")
-            # Clean JSON
             import re
             json_match = re.search(r'\{.*\}', response, re.DOTALL)
             if json_match:
