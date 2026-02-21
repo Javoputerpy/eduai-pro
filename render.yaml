@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: eduai-pro
+    name: eduai
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
@@ -14,6 +14,8 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: GROQ_API_KEY
+        sync: false
 
 databases:
   - name: eduai-db

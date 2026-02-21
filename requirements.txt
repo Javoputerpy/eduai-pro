@@ -8,4 +8,5 @@ Authlib
 gunicorn
 groq
 psycopg2-binary
-
+python-dotenv
+whitenoise

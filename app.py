@@ -8,13 +8,21 @@ import random
 from ai_model import ai_assistant
 import time
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 import io
 from PyPDF2 import PdfReader
 from docx import Document
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'eduai-pro-super-secret-key-2024'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'eduai-pro-dev-key-fallback')
+
+# Whitenoise for static files
+from whitenoise import WhiteNoise
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/')
 
 # Database Configuration
 database_url = os.environ.get('DATABASE_URL')
@@ -30,6 +38,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import db, User, Purchase, Message, Subject, Quiz, Announcement, UserProgress, TestResult, Question, Group, GroupMember, StudentRequest, Assignment, Literature
 from models import calculate_user_rank, create_user_progress, get_ai_recommendation, get_last_lesson, get_next_recommendation, get_user_context
+from render_db_update import update_db
 
 # Initialize Login manager
 login_manager = LoginManager()
@@ -130,6 +139,12 @@ app.register_blueprint(admin_bp)
 
 db.init_app(app)
 login_manager.init_app(app)
+
+# Initialize DB on startup
+with app.app_context():
+    update_db() # Run custom migration first
+    from init_db import init_db
+    init_db()
 
 @login_manager.user_loader
 def load_user(user_id):
