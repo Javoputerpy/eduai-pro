@@ -34,3 +34,6 @@ Thumbs.db
 # VS Code
 .vscode/
 .gemini/
+
+# Temporary files
+output.txt
