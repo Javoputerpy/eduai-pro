@@ -17,21 +17,23 @@ def update_db():
     logger.info(f"Connecting to database to check schema...")
     engine = create_engine(database_url)
     
-    with engine.connect() as conn:
+    # Use autocommit to avoid transaction block failures
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         # 1. Check 'user' table
         logger.info("Checking 'user' table...")
         
         # Helper to check if column exists
         def column_exists(table, column):
             if "postgresql" in database_url:
+                # In Postgres, 'user' is a special table, often in public schema
                 result = conn.execute(text(
-                    f"SELECT column_name FROM information_schema.columns WHERE table_name='{table}' AND column_name='{column}'"
-                ))
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name=:table AND column_name=:column"
+                ), {"table": table, "column": column})
+                return result.first() is not None
             else: # SQLite
                 result = conn.execute(text(f"PRAGMA table_info({table})"))
                 return column in [row[1] for row in result]
-            
-            return result.first() is not None
 
         # Columns to check in 'user' table
         user_columns = {
@@ -43,13 +45,12 @@ def update_db():
         }
         
         for col, col_type in user_columns.items():
-            if not column_exists('user', col):
-                logger.info(f"Adding column '{col}' to 'user' table...")
-                try:
+            try:
+                if not column_exists('user', col):
+                    logger.info(f"Adding column '{col}' to 'user' table...")
                     conn.execute(text(f"ALTER TABLE \"user\" ADD COLUMN {col} {col_type}"))
-                    conn.commit()
-                except Exception as e:
-                    logger.error(f"Error adding {col}: {e}")
+            except Exception as e:
+                logger.error(f"Error handling {col} in 'user': {e}")
 
         # 2. Check 'test_result' table
         test_result_columns = {
@@ -58,22 +59,20 @@ def update_db():
             'correct_answers': 'INTEGER'
         }
         for col, col_type in test_result_columns.items():
-            if not column_exists('test_result', col):
-                logger.info(f"Adding column '{col}' to 'test_result' table...")
-                try:
+            try:
+                if not column_exists('test_result', col):
+                    logger.info(f"Adding column '{col}' to 'test_result' table...")
                     conn.execute(text(f"ALTER TABLE test_result ADD COLUMN {col} {col_type}"))
-                    conn.commit()
-                except Exception as e:
-                    logger.error(f"Error: {e}")
+            except Exception as e:
+                logger.error(f"Error handling {col} in 'test_result': {e}")
 
         # 3. Check 'assignment' table
-        if not column_exists('assignment', 'quiz_id'):
-            logger.info("Adding 'quiz_id' to 'assignment'...")
-            try:
+        try:
+            if not column_exists('assignment', 'quiz_id'):
+                logger.info("Adding 'quiz_id' to 'assignment'...")
                 conn.execute(text("ALTER TABLE assignment ADD COLUMN quiz_id INTEGER"))
-                conn.commit()
-            except Exception as e:
-                logger.error(f"Error: {e}")
+        except Exception as e:
+            logger.error(f"Error handling 'quiz_id' in 'assignment': {e}")
 
         # 4. Check 'question' table
         question_columns = {
@@ -84,13 +83,12 @@ def update_db():
             'points': 'INTEGER DEFAULT 10'
         }
         for col, col_type in question_columns.items():
-            if not column_exists('question', col):
-                logger.info(f"Adding column '{col}' to 'question' table...")
-                try:
+            try:
+                if not column_exists('question', col):
+                    logger.info(f"Adding column '{col}' to 'question' table...")
                     conn.execute(text(f"ALTER TABLE question ADD COLUMN {col} {col_type}"))
-                    conn.commit()
-                except Exception as e:
-                    logger.error(f"Error: {e}")
+            except Exception as e:
+                logger.error(f"Error handling {col} in 'question': {e}")
         
         # 4. Check for 'literature' table (if it's new)
         # literature table check might be more complex if it doesn't exist at all
