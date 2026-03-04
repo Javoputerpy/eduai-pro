@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /learning_center
+Allow: /test_center
+Allow: /exam_hub
+Disallow: /admin/
+Disallow: /profile
+Disallow: /auth/
+Disallow: /view_messages
+
+Sitemap: https://eduai-pro.uz/sitemap.xml

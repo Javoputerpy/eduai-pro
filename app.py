@@ -2329,6 +2329,24 @@ def teacher_result_detail(id):
                          snapshot=snapshot,
                          student=User.query.get(result.user_id))
 
+@app.route('/robots.txt')
+def robots():
+    return app.send_static_file('robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Generates a dynamic sitemap.xml"""
+    pages = []
+    # Static pages
+    for rule in app.url_map.iter_rules():
+        if "GET" in rule.methods and len(rule.arguments) == 0:
+            pages.append(["https://eduai-pro.uz" + str(rule.rule), "2025-03-04"])
+    
+    sitemap_xml = render_template('sitemap.xml', pages=pages)
+    response = app.make_response(sitemap_xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
+
 # Initialize DB on startup (required for production like Gunicorn)
 # init_db()  # Redundant, already called at line 151 within context
 

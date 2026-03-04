@@ -4,6 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="EDUAI Pro - Sun'iy intellekt asosidagi shaxsiylashtirilgan o'qituvchi tizimi. Har bir o'quvchi uchun moslashtirilgan darslar, testlar va ovozli yordamchi.">
+    <meta name="keywords"
+        content="eduai, ai education, online learning uzbekistan, sun'iy intellekt ta'lim, masofaviy ta'lim">
+    <meta name="author" content="EDUAI Pro Team">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://eduai-pro.uz/">
+    <meta property="og:title" content="EDUAI Pro - AI O'qituvchi Tizimi">
+    <meta property="og:description"
+        content="Sun'iy intellekt bilan zamonaviy ta'lim: adaptiv darslar va ovozli yordamchi.">
+    <meta property="og:image" content="{{ url_for('static', filename='favicon.png') }}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://eduai-pro.uz/">
+    <meta property="twitter:title" content="EDUAI Pro - AI O'qituvchi Tizimi">
+    <meta property="twitter:description"
+        content="Sun'iy intellekt bilan zamonaviy ta'lim: adaptiv darslar va ovozli yordamchi.">
+    <meta property="twitter:image" content="{{ url_for('static', filename='favicon.png') }}">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <title>{% block title %}EDUAI Pro - AI O'qituvchi{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">

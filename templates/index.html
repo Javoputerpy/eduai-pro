@@ -2,6 +2,7 @@
 
 {% block title %}Bosh Sahifa - EDUAI Pro{% endblock %}
 
+
 {% block content %}
 <div class="row align-items-center min-vh-80 py-5">
     <div class="col-lg-6">
@@ -111,6 +112,20 @@
 {% endblock %}
 
 {% block extra_css %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "EDUAI Pro",
+  "url": "https://eduai-pro.uz/",
+  "logo": "https://eduai-pro.uz/static/favicon.png",
+  "description": "Sun'iy intellekt asosidagi shaxsiylashtirilgan o'qituvchi tizimi.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "UZ"
+  }
+}
+</script>
 <style>
     .min-vh-80 {
         min-height: 80vh;
