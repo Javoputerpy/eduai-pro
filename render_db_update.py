@@ -41,7 +41,10 @@ def update_db():
             'rank': 'VARCHAR(50)',
             'bio': 'TEXT',
             'avatar': 'TEXT',
-            'is_active': 'BOOLEAN DEFAULT TRUE'
+            'is_active': 'BOOLEAN DEFAULT TRUE',
+            'parent_telegram_username': 'VARCHAR(32)',
+            'parent_telegram_chat_id': 'VARCHAR(20)',
+            'points': 'INTEGER DEFAULT 0'
         }
         
         for col, col_type in user_columns.items():
@@ -56,7 +59,8 @@ def update_db():
         test_result_columns = {
             'quiz_id': 'INTEGER',
             'unique_questions_snapshot': 'TEXT',
-            'correct_answers': 'INTEGER'
+            'correct_answers': 'INTEGER',
+            'points': 'INTEGER DEFAULT 0'
         }
         for col, col_type in test_result_columns.items():
             try:
