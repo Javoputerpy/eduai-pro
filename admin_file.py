@@ -8,6 +8,16 @@ from models import db, User, Subject, TestResult, UserProgress, Question, Quiz, 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin', 
                     template_folder='templates/admin')
 
+# Admin yoki O'qituvchi tekshiruvi uchun decorator
+def teacher_or_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role not in ['teacher', 'admin']:
+            flash('Ushbu sahifaga kirish uchun ruxsat yo\'q', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Admin tekshiruvi uchun decorator
 def admin_required(f):
     @wraps(f)
@@ -150,7 +160,6 @@ def delete_user(user_id):
     Message.query.filter(db.or_(Message.sender_id==user_id, Message.recipient_id==user_id)).delete()
     
     # Agar o'qituvchi bo'lsa, u yaratgan narsalarni ham o'chirish yoki boshqasiga o'tkazish kerak
-    # Hozircha oddiy yondashuv: o'qituvchining guruhlari va testlarini o'chiramiz
     if user.role == 'teacher':
         quizzes = Quiz.query.filter_by(teacher_id=user_id).all()
         for quiz in quizzes:
@@ -504,14 +513,22 @@ def api_user_activity():
 # === YANGI: O'QITUVCHI FUNKSIYALARI ===
 @admin_bp.route('/teacher/groups')
 @login_required
-@admin_required
+@teacher_or_admin_required
 def teacher_groups():
-    """O'qituvchi guruhlari (keyinroq to'ldiramiz)"""
-    return render_template('admin/teacher_groups.html')
+    """O'qituvchi guruhlari"""
+    if current_user.role == 'admin':
+        groups = Group.query.all()
+    else:
+        groups = Group.query.filter_by(teacher_id=current_user.id).all()
+    return render_template('admin/teacher_groups.html', groups=groups)
 
 @admin_bp.route('/teacher/tests')
 @login_required
-@admin_required
+@teacher_or_admin_required
 def teacher_tests():
-    """O'qituvchi testlari (keyinroq to'ldiramiz)"""
-    return render_template('admin/teacher_tests.html')
+    """O'qituvchi testlari"""
+    if current_user.role == 'admin':
+        quizzes = Quiz.query.all()
+    else:
+        quizzes = Quiz.query.filter_by(teacher_id=current_user.id).all()
+    return render_template('admin/teacher_tests.html', quizzes=quizzes)

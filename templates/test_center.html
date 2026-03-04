@@ -291,7 +291,7 @@
             modal.show();
 
             try {
-                const resp = await fetch(`/api/start_test/${id}`);
+                const resp = await fetch(`/api/start_test/${id}?difficulty=${diff}`);
                 const data = await resp.json();
                 questions = data.questions;
                 currentIdx = 0;
@@ -348,8 +348,20 @@
 
         async function finish() {
             clearInterval(testTimer);
-            const score = questions.reduce((acc, q) => acc + (userAnswers[q.id] === q.correct_option ? 1 : 0), 0);
+            const score = questions.reduce((acc, q) => {
+                const userAns = (userAnswers[q.id] || "").toString().trim().toUpperCase();
+                const correctAns = (q.correct_option || "").toString().trim().toUpperCase();
+
+                // Compare only first characters if it's "A) ..." format
+                const isMatch = (userAns.length > 0 && correctAns.length > 0)
+                    ? userAns[0] === correctAns[0]
+                    : userAns === correctAns;
+
+                return acc + (isMatch ? 1 : 0);
+            }, 0);
+
             const percent = Math.round((score / questions.length) * 100);
+            const totalPoints = percent * 10;
 
             bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
             const resModal = new bootstrap.Modal(document.getElementById('resultsModal'));
@@ -366,7 +378,8 @@
                         answers: userAnswers,
                         score: percent,
                         correct_answers: score,
-                        total_questions: questions.length
+                        total_questions: questions.length,
+                        earned_points: totalPoints
                     })
                 });
                 const data = await resp.json();

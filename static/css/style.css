@@ -1,2 +1,82 @@
-/* Basic Style Reset if needed, otherwise empty to let Bootstrap handle it */
-/* Add custom styles here only if explicitly requested */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    --surface-color: #ffffff;
+    --background-color: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --soft-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --premium-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --border-color: #e2e8f0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-main);
+}
+
+.glass-nav {
+    background: rgba(79, 70, 229, 0.9) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.soft-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: var(--soft-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.soft-card:hover {
+    box-shadow: var(--premium-shadow);
+}
+
+.btn-premium {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-premium:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    color: white;
+}
+
+.text-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Maintain compatibility with standard Bootstrap classes while polishing them */
+.card {
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #fff;
+}

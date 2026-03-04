@@ -35,7 +35,9 @@
                         <tr>
                             <td class="fw-bold">{{ subject.name }}</td>
                             <td><code>{{ subject.code }}</code></td>
-                            <td>{{ subject.description[:50] }}...</td>
+                            <td>{{ (subject.description or '')[:50] }}{{ '...' if subject.description and
+                                subject.description|length > 50 else '' }}</td>
+
                             <td>
                                 <form action="{{ url_for('delete_subject', id=subject.id) }}" method="POST"
                                     onsubmit="return confirm('DIQQAT! Agar bu fanga bog\'liq o\'quvchilar bo\'lsa, o\'chirish mumkin emas. Davom etasizmi?');">

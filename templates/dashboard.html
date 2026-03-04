@@ -37,7 +37,7 @@
 
     <!-- Quick Stats -->
     <div class="col-md-3">
-        <div class="card h-100 card-hover border-start border-4 border-primary">
+        <div class="card h-100 soft-card border-start border-4 border-primary">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary me-3">
@@ -56,7 +56,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 card-hover border-start border-4 border-success">
+        <div class="card h-100 soft-card border-start border-4 border-success">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success me-3">
@@ -74,7 +74,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 card-hover border-start border-4 border-info">
+        <div class="card h-100 soft-card border-start border-4 border-info">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info me-3">
@@ -89,7 +89,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 card-hover border-start border-4 border-warning">
+        <div class="card h-100 soft-card border-start border-4 border-warning">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning me-3">
@@ -110,11 +110,10 @@
         <h5 class="fw-bold mb-4 ps-2 border-start border-4 border-primary">Asosiy Bo'limlar</h5>
         <div class="row g-3 mb-5">
             <div class="col-md-6">
-                <a href="{{ url_for('ai_tutor_page') }}"
-                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                <a href="{{ url_for('ai_tutor_page') }}" class="card soft-card text-decoration-none h-100 border-0">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-gradient-primary text-white rounded-3 p-3 me-3"
-                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #4F46E5, #8B5CF6);">
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: var(--primary-gradient);">
                             <i class="fas fa-robot fa-lg"></i>
                         </div>
                         <div>
@@ -126,8 +125,7 @@
                 </a>
             </div>
             <div class="col-md-6">
-                <a href="{{ url_for('test_center') }}"
-                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                <a href="{{ url_for('test_center') }}" class="card soft-card text-decoration-none h-100 border-0">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-gradient-success text-white rounded-3 p-3 me-3"
                             style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #10B981, #059669);">
@@ -141,8 +139,7 @@
                 </a>
             </div>
             <div class="col-md-6">
-                <a href="{{ url_for('learning_center') }}"
-                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                <a href="{{ url_for('learning_center') }}" class="card soft-card text-decoration-none h-100 border-0">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-gradient-warning text-white rounded-3 p-3 me-3"
                             style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #F59E0B, #D97706);">
@@ -155,9 +152,23 @@
                     </div>
                 </a>
             </div>
+            <div class="col-md-6 text-center">
+                <a href="{{ url_for('exam_hub') }}"
+                    class="card soft-card text-decoration-none h-100 border-0 bg-primary bg-opacity-10">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-3 p-3 me-3"
+                            style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #4F46E5, #7C3AED);">
+                            <i class="fas fa-file-signature fa-lg"></i>
+                        </div>
+                        <div class="text-start">
+                            <h5 class="fw-bold text-dark mb-1">Imtihon Markazi</h5>
+                            <p class="text-muted small mb-0">SAT, IELTS va Milliy Sertifikat mock imtihonlari.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
             <div class="col-md-6">
-                <a href="{{ url_for('library') }}"
-                    class="card card-hover text-decoration-none h-100 shadow-sm border-0">
+                <a href="{{ url_for('library') }}" class="card soft-card text-decoration-none h-100 border-0">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="bg-gradient-info text-white rounded-3 p-3 me-3"
                             style="min-width: 60px; min-height: 60px; display: grid; place-items: center; background: linear-gradient(135deg, #3B82F6, #2563EB);">
@@ -171,6 +182,43 @@
                 </a>
             </div>
         </div>
+
+        <!-- User Groups -->
+        <h5 class="fw-bold mb-4 ps-2 border-start border-4 border-info">Mening Guruhlarim</h5>
+        {% if user_groups %}
+        <div class="row g-3 mb-5">
+            {% for group in user_groups %}
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info me-3">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ group.name }}</h6>
+                                <small class="text-muted">Kodi: {{ group.code }}</small>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">{{ group.description or "Guruh haqida tavsif yo'q." }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><i class="fas fa-chalkboard-teacher me-1"></i>{{
+                                group.teacher.username }}</small>
+                            <span class="badge bg-light text-primary rounded-pill">{{ group.members|length }} ta
+                                o'quvchi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-0 bg-light mb-5">
+            <div class="card-body text-center py-5">
+                <p class="text-muted mb-0">Siz hali biron bir guruhga a'zo emassiz.</p>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Pending Quizzes from Teachers -->
         <!-- Logic for pending quizzes would act properly if passed from backend, assuming variables exist -->

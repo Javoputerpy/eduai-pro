@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Imtihon Simulyatsiyasi - EDUAI Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f0f2f5;
+    }
+
+    .simulation-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .exam-header {
+        background: white;
+        padding: 1rem 2rem;
+        border-bottom: 2px solid #e1e4e8;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-top: 2rem;
+    }
+
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border: 2px solid #e1e4e8;
+        border-radius: 12px;
+        background: transparent;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .option-btn:hover {
+        background-color: #f8f9fa;
+        border-color: #4e54c8;
+    }
+
+    .option-btn.selected {
+        background-color: #eef2ff;
+        border-color: #4e54c8;
+        color: #4e54c8;
+    }
+
+    .option-letter {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        background: #f1f3f5;
+        border-radius: 6px;
+        margin-right: 15px;
+        font-weight: bold;
+    }
+
+    .timer-display {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .progress-minimal {
+        height: 6px;
+        border-radius: 3px;
+        margin-top: 10px;
+    }
+
+    .navigation-dots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #dee2e6;
+        cursor: pointer;
+    }
+
+    .dot.active {
+        background: #4e54c8;
+        transform: scale(1.2);
+    }
+
+    .dot.answered {
+        background: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="simulation-container pb-5">
+    <!-- Bluebook style header -->
+    <div class="exam-header d-flex justify-content-between align-items-center rounded-3 mb-4">
+        <div>
+            <h5 class="mb-0 fw-bold">{{ exam.title }}</h5>
+            <div class="small text-muted">{{ section.title }} | Savol: <span id="current-index">1</span>/{{
+                total_questions }}</div>
+        </div>
+        <div class="text-center bg-light px-4 py-2 rounded-pill shadow-sm">
+            <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Qolgan vaqt</div>
+            <div class="timer-display" id="timer">00:00</div>
+        </div>
+        <div>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 me-2" id="exit-exam">Chiqish</button>
+            <button class="btn btn-primary btn-sm rounded-pill px-4" id="submit-exam">Yakunlash</button>
+        </div>
+    </div>
+
+    <!-- Main Question Area -->
+    <div id="exam-area" data-aos="fade-in">
+        <div class="question-card">
+            <div class="question-meta mb-3">
+                <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">1-Savol</span>
+            </div>
+            <h4 class="question-text mb-5 lh-base fw-semibold" id="question-content">
+                Loading question...
+            </h4>
+
+            <div class="options-group" id="options-container">
+                <!-- Options will be injected here -->
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <button class="btn btn-light rounded-pill px-4" id="prev-btn" disabled>
+                <i class="fas fa-arrow-left me-2"></i>Orqaga
+            </button>
+            <div class="navigation-dots" id="nav-dots">
+                <!-- Dots injected here -->
+            </div>
+            <button class="btn btn-primary rounded-pill px-4" id="next-btn">
+                Keyingisi<i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // In-memory data for simulation
+    const questions = {{ questions_json | safe }};
+    let currentIndex = 0;
+    const userAnswers = new Array(questions.length).fill(null);
+    let timeLeft = {{ total_duration }}; // seconds
+
+    function initExam() {
+        renderQuestion();
+        renderDots();
+        startTimer();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentIndex];
+        document.getElementById('current-index').textContent = currentIndex + 1;
+        document.getElementById('question-content').textContent = q.text;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        ['A', 'B', 'C', 'D'].forEach(letter => {
+            if (q.options[letter]) {
+                const btn = document.createElement('button');
+                btn.className = `option-btn ${userAnswers[currentIndex] === letter ? 'selected' : ''}`;
+                btn.innerHTML = `<span class="option-letter">${letter}</span> ${q.options[letter]}`;
+                btn.onclick = () => selectOption(letter);
+                container.appendChild(btn);
+            }
+        });
+
+        document.getElementById('prev-btn').disabled = currentIndex === 0;
+        document.getElementById('next-btn').innerHTML = currentIndex === questions.length - 1 ?
+            'Tugatish <i class="fas fa-check ms-2"></i>' : 'Keyingisi <i class="fas fa-arrow-right ms-2"></i>';
+    }
+
+    function selectOption(letter) {
+        userAnswers[currentIndex] = letter;
+        renderQuestion();
+        renderDots();
+    }
+
+    function renderDots() {
+        const container = document.getElementById('nav-dots');
+        container.innerHTML = '';
+        questions.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = `dot ${i === currentIndex ? 'active' : ''} ${userAnswers[i] ? 'answered' : ''}`;
+            dot.onclick = () => { currentIndex = i; renderQuestion(); renderDots(); };
+            container.appendChild(dot);
+        });
+    }
+
+    function startTimer() {
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                alert('Vaqt tugadi!');
+                submitExam();
+                return;
+            }
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    document.getElementById('next-btn').onclick = () => {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            renderQuestion();
+            renderDots();
+        } else {
+            if (confirm('Imtihonni yakunlashni xohlaysizmi?')) submitExam();
+        }
+    };
+
+    document.getElementById('prev-btn').onclick = () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion();
+            renderDots();
+        }
+    };
+
+    function submitExam() {
+        // Submit logic via API
+        fetch('/api/exams/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exam_id: {{ exam.id }},
+            answers: userAnswers
+            })
+        }).then(res => res.json()).then(data => {
+                window.location.href = `/exams/results/${data.result_id}`;
+            });
+    }
+
+    initExam();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-container py-5">
+    <div class="container max-width-700 mx-auto">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="zoom-in">
+            <div class="card-header bg-primary text-white text-center py-5">
+                <div class="display-3 fw-bold mb-0">{{ result.total_score }}</div>
+                <div class="text-uppercase fw-bold opacity-75">Umumiy Ball</div>
+            </div>
+            <div class="card-body p-5">
+                <h2 class="text-center fw-bold mb-4">Imtihon Yakunlandi!</h2>
+                <p class="text-center text-muted mb-5">Siz {{ result.exam.title }} simulyatsiyasini muvaffaqiyatli
+                    yakunladingiz. Natijalaringiz quyida keltirilgan:</p>
+
+                <div class="section-breakdown mb-5">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3">Bo'limlar bo'yicha natija:</h5>
+                    {% for section, score in section_scores.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3">
+                        <span class="fw-medium">{{ section }}</span>
+                        <span class="badge bg-primary rounded-pill px-3">{{ score }} ball</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('exam_hub') }}" class="btn btn-primary rounded-pill py-3 fw-bold">Asosiy
+                        sahifaga qaytish</a>
+                    <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary rounded-pill py-3">Reytingni
+                        ko'rish</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .max-width-700 {
+        max-width: 700px;
+    }
+
+    .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+    }
+</style>
+{% endblock %}

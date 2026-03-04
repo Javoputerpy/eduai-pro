@@ -11,14 +11,15 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary glass-nav sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-robot me-2"></i>EDUAI Pro
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="fas fa-robot me-2 fs-4 text-white"></i>
+                <span class="text-white">EDUAI Pro</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -100,6 +101,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('exam_hub') }}">
+                            <i class="fas fa-file-signature me-1"></i>Imtihon Markazi
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('student_quizzes') }}">
                             <i class="fas fa-file-alt me-1"></i>Testlar
                         </a>
@@ -113,7 +119,7 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-chart-line me-1"></i>Statistika
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu border-0 shadow-sm">
                             <li><a class="dropdown-item" href="{{ url_for('progress_analytics') }}">Progress Tahlili</a>
                             </li>
                             <li><a class="dropdown-item" href="{{ url_for('achievements') }}">Yutuqlar</a></li>
@@ -133,14 +139,14 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
                                 style="width: 32px; height: 32px; font-weight: bold;">
                                 {{ current_user.username[0].upper() }}
                             </div>
                             <span class="d-none d-lg-inline">{{ current_user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
-                            <li class="px-3 py-2 border-bottom mb-2">
+                            <li class="px-3 py-2 border-bottom mb-2 bg-light">
                                 <div class="fw-bold text-dark">{{ current_user.username }}</div>
                                 <div class="small text-muted text-capitalize">
                                     {% if current_user.role == 'teacher' %}
@@ -163,7 +169,7 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item rounded py-2 text-danger" href="{{ url_for('logout') }}"><i
+                            <li><a class="dropdown-item rounded py-2 text-danger" href="{{ url_for('auth.logout') }}"><i
                                         class="fas fa-sign-out-alt me-2"></i>Chiqish</a></li>
                         </ul>
                     </li>
@@ -171,12 +177,13 @@
                 {% else %}
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i>Kirish
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">
+                        <a class="nav-link btn btn-light text-primary ms-lg-2 rounded-pill px-3 py-1 shadow-sm border-0"
+                            href="{{ url_for('auth.register') }}">
                             <i class="fas fa-user-plus me-1"></i>Ro'yxatdan o'tish
                         </a>
                     </li>
@@ -186,11 +193,12 @@
         </div>
     </nav>
 
-    <main class="container mt-4">
+    <main class="container mt-4 min-vh-100">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
-        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+        <div
+            class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show border-0 shadow-sm rounded-3">
             <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -202,9 +210,12 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-light py-4 mt-5">
+    <footer class="bg-white border-top py-5 mt-5">
         <div class="container text-center">
-            <p>&copy; 2025 EDUAI Pro - AI O'qituvchi Tizimi. Barcha huquqlar himoyalangan.</p>
+            <div class="mb-3">
+                <i class="fas fa-robot text-primary opacity-50 fs-2"></i>
+            </div>
+            <p class="text-muted small">&copy; 2025 EDUAI Pro - AI O'qituvchi Tizimi. Barcha huquqlar himoyalangan.</p>
         </div>
     </footer>
 

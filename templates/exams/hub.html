@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="exam-hub-container py-5">
+    <div class="container">
+        <div class="hub-header text-center mb-5" data-aos="fade-up">
+            <h1 class="display-4 fw-bold gradient-text">Imtihon Markazi</h1>
+            <p class="lead text-muted">Xalqaro standartlar asosida o'zingizni sinab ko'ring va qo'shimcha ballar
+                to'plang.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- SAT Exam Card -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card exam-card h-100 border-0 shadow-lg overflow-hidden">
+                    <div class="card-badge bg-primary">SAT</div>
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-wrapper mb-4">
+                            <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="card-title fw-bold">SAT Simulation</h3>
+                        <p class="card-text text-muted small">Digital SAT formatida, Math va Reading & Writing
+                            bo'limlaridan iborat to'liq simulyatsiya.</p>
+                        <div class="exam-stats d-flex justify-content-center gap-3 mb-4">
+                            <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> 180 min</span>
+                            <span class="badge bg-light text-dark"><i class="fas fa-star me-1"></i> +500 XP</span>
+                        </div>
+                        <a href="{{ url_for('browse_exams', exam_type='SAT') }}"
+                            class="btn btn-primary w-100 rounded-pill py-2 shadow-sm">Boshlash</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IELTS Exam Card -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card exam-card h-100 border-0 shadow-lg overflow-hidden">
+                    <div class="card-badge bg-success">IELTS</div>
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-wrapper mb-4">
+                            <i class="fas fa-language fa-3x text-success"></i>
+                        </div>
+                        <h3 class="card-title fw-bold">IELTS Academic</h3>
+                        <p class="card-text text-muted small">Listening, Reading va Writing bo'limlari bo'yicha haqiqiy
+                            imtihon tajribasi.</p>
+                        <div class="exam-stats d-flex justify-content-center gap-3 mb-4">
+                            <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> 160 min</span>
+                            <span class="badge bg-light text-dark"><i class="fas fa-star me-1"></i> +400 XP</span>
+                        </div>
+                        <a href="{{ url_for('browse_exams', exam_type='IELTS') }}"
+                            class="btn btn-success w-100 rounded-pill py-2 shadow-sm">Boshlash</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MS Exam Card -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card exam-card h-100 border-0 shadow-lg overflow-hidden">
+                    <div class="card-badge bg-info">MS</div>
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-wrapper mb-4">
+                            <i class="fas fa-microscope fa-3x text-info"></i>
+                        </div>
+                        <h3 class="card-title fw-bold">Milliy Sertifikat</h3>
+                        <p class="card-text text-muted small">O'zbekiston standartlari bo'yicha fanlardan milliy
+                            sertifikat imtihonlari.</p>
+                        <div class="exam-stats d-flex justify-content-center gap-3 mb-4">
+                            <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> 120 min</span>
+                            <span class="badge bg-light text-dark"><i class="fas fa-star me-1"></i> +300 XP</span>
+                        </div>
+                        <a href="{{ url_for('browse_exams', exam_type='MS') }}"
+                            class="btn btn-info w-100 rounded-pill py-2 text-white shadow-sm">Boshlash</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .exam-hub-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 80vh;
+    }
+
+    .gradient-text {
+        background: linear-gradient(45deg, #4e54c8, #8f94fb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .exam-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 20px;
+        position: relative;
+    }
+
+    .exam-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 5px 25px;
+        color: white;
+        font-weight: bold;
+        transform: rotate(45deg) translate(15px, -10px);
+        width: 150px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .exam-stats .badge {
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}

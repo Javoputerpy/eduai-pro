@@ -3,172 +3,218 @@
 {% block title %}Profil - EDUAI Pro{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Profil</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="row g-4">
-    <!-- Profil ma'lumotlari -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center position-relative">
-
-                {% if user.id == current_user.id %}
-                <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2" data-bs-toggle="modal"
-                    data-bs-target="#editProfileModal">
-                    <i class="fas fa-edit"></i>
-                </button>
-                {% endif %}
-
-                <div class="avatar-section mb-4">
-                    <div class="avatar bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white fs-2 fw-bold shadow-sm"
-                        style="width: 100px; height: 100px;">
-                        {% if user.avatar and user.avatar != 'default.jpg' %}
-                        <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle w-100 h-100 object-fit-cover">
-                        {% else %}
-                        {{ user.username[0].upper() }}
-                        {% endif %}
-                    </div>
-                </div>
-
-                <h4 class="card-title fw-bold mb-1">{{ user.username }}</h4>
-                <!-- Rank Badge -->
-                {% if user.role == 'teacher' %}
-                <span class="badge bg-warning text-dark mb-3">{{ user.teacher_rank or "O'qituvchi" }}</span>
-                {% else %}
-                <span class="badge bg-info mb-3">{{ user.rank }}</span>
-                {% endif %}
-
-                <p class="text-muted mb-2">{{ user.email }}</p>
-                {% if user.phone %}
-                <p class="text-muted mb-2"><i class="fas fa-phone me-2"></i>{{ user.phone }}</p>
-                {% endif %}
-
-                {% if user.bio %}
-                <p class="small text-muted fst-italic px-3">{{ user.bio }}</p>
-                {% endif %}
-
-                <p class="text-muted small mt-3">
-                    <i class="fas fa-calendar me-2"></i>
-                    {{ user.created_at.strftime('%d.%m.%Y') }} dan beri a'zo
-                </p>
-
-                <div class="row text-center mt-4 border-top pt-3">
-                    <div class="col-4">
-                        <h5 class="text-primary fw-bold">{{ user.get_tests_taken() }}</h5>
-                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">Testlar</small>
-                    </div>
-                    <div class="col-4 border-start border-end">
-                        <h5 class="text-success fw-bold">{{ user.get_overall_progress() }}%</h5>
-                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">Progress</small>
-                    </div>
-                    <div class="col-4">
-                        <h5 class="text-warning fw-bold">{{ user.get_avg_test_score() }}%</h5>
-                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">O'rtacha</small>
-                    </div>
-                </div>
-
-                <!-- Teacher Actions for Students -->
-                {% if current_user.role == 'teacher' and user.role == 'student' %}
-                <hr>
-                <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#assignRankModal">
-                    <i class="fas fa-trophy me-2"></i>Daraja Berish
-                </button>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Tez statistikalar -->
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-white border-0 py-3">
-                <h6 class="card-title mb-0 fw-bold">
-                    <i class="fas fa-chart-bar me-2 text-info"></i>Statistika
-                </h6>
-            </div>
-            <div class="card-body pt-0">
-                <div class="stats-list">
-                    <div class="stat-item d-flex justify-content-between py-2 border-bottom">
-                        <span>Umumiy fanlar:</span>
-                        <strong>{{ user.progress|length }}</strong>
-                    </div>
-                    <div class="stat-item d-flex justify-content-between py-2 border-bottom">
-                        <span>Yaxshi o'zlashtirilgan:</span>
-                        <strong class="text-success">
-                            {{ user.progress|selectattr("progress_percentage", "ge", 70)|list|length }}
-                        </strong>
-                    </div>
-                    <div class="stat-item d-flex justify-content-between py-2">
-                        <span>Jarayonda:</span>
-                        <strong class="text-warning">
-                            {{ user.progress|selectattr("progress_percentage", "ge",
-                            30)|selectattr("progress_percentage", "lt", 70)|list|length }}
-                        </strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Asosiy kontent -->
-    <div class="col-lg-8">
-        <!-- Progress statistikasi -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="card-title mb-0 fw-bold">
-                    <i class="fas fa-chart-pie me-2 text-info"></i>Fanlar Bo'yicha Progress
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="subjectChart" width="400" height="150"></canvas>
-            </div>
-        </div>
-
-        <!-- Fanlar progressi list -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="card-title mb-0 fw-bold">
-                    <i class="fas fa-book me-2 text-primary"></i>Fanlar Progressi
-                </h5>
-            </div>
-            <div class="card-body pt-0">
-                <div class="progress-list">
-                    {% for progress in user.progress %}
-                    {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
-                    {% if subject %}
-                    <div class="progress-item mb-3 p-3 bg-light rounded hover-shadow transition">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-dark">{{ subject.name }}</span>
-                            <span class="badge bg-primary rounded-pill">{{ progress.progress_percentage }}%</span>
-                        </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar 
-                                {% if progress.progress_percentage >= 70 %}bg-success
-                                {% elif progress.progress_percentage >= 30 %}bg-warning
-                                {% else %}bg-danger{% endif %}" style="width: ({{ progress.progress_percentage }})%">
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden"
+                style="border-radius: 20px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);">
+                <div class="card-body p-4 p-md-5 text-white">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="position-relative">
+                                <div class="avatar-wrapper rounded-circle p-1 bg-white shadow-lg"
+                                    style="width: 120px; height: 120px;">
+                                    {% if user.avatar and user.avatar != 'default.jpg' %}
+                                    <img src="{{ user.avatar }}" alt="Avatar"
+                                        class="rounded-circle w-100 h-100 object-fit-cover">
+                                    {% else %}
+                                    <div
+                                        class="w-100 h-100 rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fs-1 fw-bold">
+                                        {{ user.username[0].upper() }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <button
+                                    class="btn btn-sm btn-light rounded-circle position-absolute bottom-0 end-0 shadow"
+                                    data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                    <i class="fas fa-camera"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i> {{ progress.last_activity.strftime('%d.%m.%Y') }}
-                            </small>
-                            {% if current_user.role == 'teacher' %}
-                            <a href="#" class="text-decoration-none small">Natijalarni ko'rish</a>
-                            {% endif %}
+                        <div class="col mt-3 mt-md-0">
+                            <h2 class="fw-bold mb-1">{{ user.full_name or user.username }}</h2>
+                            <p class="mb-2 opacity-75">@{{ user.username }} • {{ user.email }}</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span
+                                    class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-50">
+                                    <i class="fas fa-trophy me-1 text-warning"></i> {{ user.rank }}
+                                </span>
+                                <span
+                                    class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-50">
+                                    <i class="fas fa-user-tag me-1 text-info"></i> {{ user.role.capitalize() }}
+                                </span>
+                                {% if user.parent_telegram_username %}
+                                <span
+                                    class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-50">
+                                    <i class="fab fa-telegram me-1 text-info"></i> Monitoring: @{{
+                                    user.parent_telegram_username }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                        <div class="col-md-auto mt-4 mt-md-0">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-white text-primary fw-bold px-4 rounded-pill shadow-sm"
+                                    data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                    Tahrirlash
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    {% endif %}
-                    {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">Progress mavjud emas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 50px; height: 50px;">
+                        <i class="fas fa-file-alt fs-4"></i>
                     </div>
-                    {% endfor %}
+                    <h3 class="fw-bold mb-1">{{ stats.total_tests }}</h3>
+                    <p class="text-muted small mb-0 text-uppercase tracking-wider">Testlar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 50px; height: 50px;">
+                        <i class="fas fa-chart-line fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.overall_progress }}%</h3>
+                    <p class="text-muted small mb-0 text-uppercase tracking-wider">Progress</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 50px; height: 50px;">
+                        <i class="fas fa-star fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.avg_score }}%</h3>
+                    <p class="text-muted small mb-0 text-uppercase tracking-wider">O'rtacha Ball</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 50px; height: 50px;">
+                        <i class="fas fa-medal fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1 text-truncate px-2">{{ stats.best_subject.name if stats.best_subject else
+                        "Yo'q" }}</h3>
+                    <p class="text-muted small mb-0 text-uppercase tracking-wider">Eng Yaxshi Fan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Analysis -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 py-4 px-4">
+                    <h5 class="fw-bold mb-0">Bilimlar Diagrammasi</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div style="height: 300px;">
+                        <canvas id="subjectChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Progress -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 py-4 px-4">
+                    <h5 class="fw-bold mb-0">Fanlar Bo'yicha Progress</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for progress in user.progress %}
+                        {% set subject = subjects|selectattr("id", "equalto", progress.subject_id)|first %}
+                        {% if subject %}
+                        <div class="list-group-item border-0 px-4 py-3 hover-bg-light transition">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 bg-light p-2 me-3">
+                                        <i class="fas fa-book text-primary"></i>
+                                    </div>
+                                    <span class="fw-bold">{{ subject.name }}</span>
+                                </div>
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">{{
+                                    progress.progress_percentage }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f0f2f5;">
+                                <div class="progress-bar rounded-pill" role="progressbar"
+                                    style="width: {{ progress.progress_percentage }}%; background: linear-gradient(90deg, #6366f1, #a855f7);"
+                                    aria-valuenow="{{ progress.progress_percentage }}" aria-valuemin="0"
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    So'nggi faollik: {{ progress.last_activity.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Activity -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 py-4 px-4">
+                    <h5 class="fw-bold mb-0">So'nggi Natijalar</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for result in recent_results %}
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ result.subject.name if result.subject else 'Test' }}
+                                    </h6>
+                                    <small class="text-muted">{{ result.completed_at.strftime('%d %b, %H:%M') }}</small>
+                                </div>
+                                <span class="fw-bold {{ 'text-success' if result.score >= 70 else 'text-warning' }}">
+                                    {{ result.score }}%
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if not recent_results %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted small mb-0">Hozircha natijalar yo'q</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="card border-0 shadow-sm bg-light mb-4"
+                style="border-radius: 15px; border: 1px dashed #ced4da !important;">
+                <div class="card-body p-4 text-center">
+                    <p class="small text-muted mb-0">
+                        {{ user.bio or "Hozircha bio mavjud emas. Profilni tahrirlash orqali o'zingiz haqingizda
+                        ma'lumot qo'shing." }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -177,89 +223,75 @@
 
 <!-- Edit Profile Modal -->
 <div class="modal fade" id="editProfileModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Profilni Tahrirlash</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-bold">Profilni Tahrirlash</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('update_profile') }}" method="POST">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label">To'liq Ism (F.I.Sh)</label>
-                        <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}"
-                            placeholder="Ism Familiya">
+                        <label class="form-label small fw-bold text-muted text-uppercase">To'liq Ism</label>
+                        <input type="text" name="full_name" class="form-control rounded-3"
+                            value="{{ user.full_name or '' }}" placeholder="Ism Familiya">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Avatar URL</label>
-                        <input type="text" name="avatar" class="form-control" value="{{ user.avatar or '' }}"
+                        <label class="form-label small fw-bold text-muted text-uppercase">Avatar URL</label>
+                        <input type="text" name="avatar" class="form-control rounded-3" value="{{ user.avatar or '' }}"
                             placeholder="https://example.com/image.jpg">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Bio (O'zingiz haqingizda)</label>
-                        <textarea name="bio" class="form-control" rows="3">{{ user.bio or '' }}</textarea>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Bio</label>
+                        <textarea name="bio" class="form-control rounded-3" rows="3">{{ user.bio or '' }}</textarea>
                     </div>
-                    <hr>
                     <div class="mb-3">
-                        <label class="form-label">Yangi Parol (ixtiyoriy)</label>
-                        <input type="password" name="new_password" class="form-control"
-                            placeholder="Parolni o'zgartirish uchun kiriting">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Ota-ona Telegram
+                            Username</label>
+                        <input type="text" name="parent_telegram_username" class="form-control rounded-3"
+                            value="{{ user.parent_telegram_username or '' }}" placeholder="Masalan: ota_familiya">
+                        <div class="form-text small">Ota-onangizning Telegram usernamini kiriting. Ular botga start
+                            bosganda natijalaringiz avtomatik yuboriladi.</div>
                     </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">Bekor
+                        qilish</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Saqlash</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<!-- Assign Rank Modal (Teacher Only) -->
-{% if current_user.role == 'teacher' %}
-<div class="modal fade" id="assignRankModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">O'quvchiga Daraja Berish</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ url_for('set_student_rank', id=user.id) }}" method="POST">
-                <div class="modal-body">
-                    <p class="text-muted">Ushbu o'quvchiga maxsus daraja yoki unvon bering.</p>
-                    <div class="mb-3">
-                        <label class="form-label">Daraja Nomi</label>
-                        <input type="text" name="rank" class="form-control" list="rankOptions" value="{{ user.rank }}"
-                            required>
-                        <datalist id="rankOptions">
-                            <option value="A'lochi">
-                            <option value="Eng Faol">
-                            <option value="Kitobxon">
-                            <option value="Dahiy">
-                            <option value="Yaxshi o'quvchi">
-                        </datalist>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-success">Saqlash</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .hover-shadow:hover {
-        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .05) !important;
+    .tracking-wider {
+        letter-spacing: 0.05em;
     }
 
     .transition {
-        transition: all 0.3s ease;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .hover-bg-light:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    .btn-white {
+        background-color: #fff;
+        color: #6366f1;
+        border: none;
+    }
+
+    .btn-white:hover {
+        background-color: #f8f9fa;
+    }
+
+    .avatar-wrapper {
+        overflow: hidden;
     }
 </style>
 {% endblock %}
@@ -268,42 +300,49 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const subjectCtx = document.getElementById('subjectChart');
-        if (subjectCtx) {
-            const subjectData = {
-                labels: [
-                    {% for progress in user.progress %}
-            {% set subject = subjects | selectattr("id", "equalto", progress.subject_id) | first %}
-            {% if subject %} '{{ subject.name }}', {% endif %}
-        {% endfor %}
-            ],
+        const ctx = document.getElementById('subjectChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        {% for progress in user.progress %}
+                    {% set subject = subjects | selectattr("id", "equalto", progress.subject_id) | first %}
+        {% if subject %} '{{ subject.name }}', {% endif %}
+                    {% endfor %}
+                ],
         datasets: [{
+            label: 'Progress (%)',
             data: [
                 {% for progress in user.progress %}
-                    {{ progress.progress_percentage }},
+                        {{ progress.progress_percentage }},
         {% endfor %}
-                ],
-        backgroundColor: [
-        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-        '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
-    ]
-            }]
-        };
-
-    new Chart(subjectCtx, {
-        type: 'doughnut',
-        data: subjectData,
+    ],
+        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+        borderColor: 'rgb(99, 102, 241)',
+        borderWidth: 2,
+        borderRadius: 8,
+        barThickness: 30
+                }]
+            },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { boxWidth: 12 }
-                }
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                grid: { display: false }
+            },
+            x: {
+                grid: { display: false }
             }
         }
-    });
+    }
+        });
     }
 });
 </script>

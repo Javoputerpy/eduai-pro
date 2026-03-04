@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+# Load environment variables from .env as soon as possible
+load_dotenv()
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -8,10 +12,6 @@ import random
 from ai_model import ai_assistant
 import time
 import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env
-load_dotenv()
 
 import io
 from PyPDF2 import PdfReader
@@ -36,13 +36,13 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, User, Purchase, Message, Subject, Quiz, Announcement, UserProgress, TestResult, Question, Group, GroupMember, StudentRequest, Assignment, Literature
+from models import db, User, Purchase, Message, Subject, Quiz, Announcement, UserProgress, TestResult, Question, Group, GroupMember, StudentRequest, Assignment, Literature, Exam, ExamSection, ExamQuestion, ExamResult
 from models import calculate_user_rank, create_user_progress, get_ai_recommendation, get_last_lesson, get_next_recommendation, get_user_context
 from render_db_update import update_db
 
 # Initialize Login manager
 login_manager = LoginManager()
-login_manager.login_view = 'login'
+login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Iltimos, tizimga kiring'
 
 # Role based decorators
@@ -72,10 +72,21 @@ google = oauth.register(
 def login_google():
     google_client = oauth.create_client('google')  # Create client
     redirect_uri = url_for('google_auth', _external=True)
-    return google_client.authorize_redirect(redirect_uri)
+    # Generate and store state for CSRF protection
+    import hmac
+    state = hmac.new(app.config['SECRET_KEY'].encode(), os.urandom(16), 'sha256').hexdigest()
+    session['oauth_state'] = state
+    return google_client.authorize_redirect(redirect_uri, state=state)
 
 @app.route('/login/google/callback')
 def google_auth():
+    # Verify state for CSRF protection
+    sent_state = request.args.get('state')
+    saved_state = session.pop('oauth_state', None)
+    if not saved_state or sent_state != saved_state:
+        flash('Xavfsizlik tekshiruvi muvaffaqiyatsiz tugadi (OAuth State mismatch)', 'error')
+        return redirect(url_for('index'))
+        
     google_client = oauth.create_client('google')  # Create client
     token = google_client.authorize_access_token()
     resp = google_client.get('userinfo')
@@ -133,7 +144,11 @@ def teacher_required(f):
 
 # Blueprint Registration
 from admin_file import admin_bp
+from routes.auth import auth_bp
+from routes.api import api_bp
 app.register_blueprint(admin_bp)
+app.register_blueprint(auth_bp)
+app.register_blueprint(api_bp)
 
 # Models and logic moved to models.py
 
@@ -145,6 +160,14 @@ with app.app_context():
     update_db() # Run custom migration first
     from init_db import init_db
     init_db()
+    
+    # Start Telegram Bot
+    import os
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        from telegram_bot import start_bot_thread
+        start_bot_thread()
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -157,87 +180,123 @@ def index():
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-        
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        # Case insensitive check
-        if User.query.filter(db.func.lower(User.username) == db.func.lower(username)).first():
-            flash('Bu username band!', 'error')
-            return render_template('register.html')
-            
-        if User.query.filter_by(email=email).first():
-            flash('Bu email band!', 'error')
-            return render_template('register.html')
-        
-        user = User(username=username, email=email)
-        user.set_password(password)
-        
-        db.session.add(user)
-        db.session.commit()
-        
-        # Yangi foydalanuvchi uchun progress yaratish
-        create_user_progress(user.id)
-        
-        login_user(user)
-        flash('Muvaffaqiyatli ro\'yxatdan o\'tdingiz!', 'success')
-        return redirect(url_for('dashboard'))
-    
-    return render_template('register.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-        
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        user = User.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password):
-            if not user.is_active:
-                flash('Sizning hisobingiz vaqtincha muzlatilgan!', 'error')
-                return render_template('login.html')
-
-            login_user(user)
-            flash(f'Xush kelibsiz, {username}!', 'success')
-            
-            # Role based redirect
-            if user.role == 'admin':
-                return redirect(url_for('admin_dashboard'))
-            elif user.role == 'teacher':
-                return redirect(url_for('teacher_dashboard'))
-            else:
-                return redirect(url_for('dashboard'))
-
-        else:
-            flash('Login yoki parol xato!', 'error')
-    
-    return render_template('login.html')
-
-@app.route('/logout')
+@app.route('/exams')
 @login_required
-def logout():
-    logout_user()
-    flash('Siz tizimdan chiqdingiz', 'info')
-    return redirect(url_for('index'))
+def exam_hub():
+    """Imtihon markazi asosiy sahifasi"""
+    return render_template('exams/hub.html')
 
-@app.route('/dashboard')
+@app.route('/exams/<string:exam_type>')
+@login_required
+def browse_exams(exam_type):
+    """Ma'lum turdagi imtihonlarni ko'rish (SAT, IELTS, MS)"""
+    exams = Exam.query.filter_by(exam_type=exam_type.upper(), is_active=True).all()
+    return render_template('exams/browse.html', exams=exams, exam_type=exam_type.upper())
+
+@app.route('/exams/simulate/<int:exam_id>')
+@login_required
+def simulate_exam(exam_id):
+    """Imtihon simulyatsiyasini boshlash"""
+    exam = Exam.query.get_or_404(exam_id)
+    
+    # Hozircha birinchi sectionni olamiz
+    section = ExamSection.query.filter_by(exam_id=exam.id).order_by(ExamSection.order).first()
+    if not section:
+        flash('Ushbu imtihon uchun bo\'limlar topilmadi', 'error')
+        return redirect(url_for('exam_hub'))
+        
+    questions = ExamQuestion.query.filter_by(section_id=section.id).all()
+    questions_json = []
+    for q in questions:
+        questions_json.append({
+            'text': q.question_text,
+            'options': {'A': q.option_a, 'B': q.option_b, 'C': q.option_c, 'D': q.option_d},
+            'type': q.question_type
+        })
+        
+    return render_template('exams/simulate.html', 
+                         exam=exam, 
+                         section=section, 
+                         questions_json=json.dumps(questions_json),
+                         total_questions=len(questions),
+                         total_duration=section.duration_minutes * 60)
+
+@app.route('/api/exams/submit', methods=['POST'])
+@login_required
+def api_submit_exam():
+    """Imtihon natijalarini topshirish"""
+    data = request.get_json()
+    exam_id = data.get('exam_id')
+    user_answers = data.get('answers') # List: ['A', 'B', None, 'C']
+    
+    exam = Exam.query.get_or_404(exam_id)
+    section = ExamSection.query.filter_by(exam_id=exam.id).order_by(ExamSection.order).first()
+    questions = ExamQuestion.query.filter_by(section_id=section.id).all()
+    
+    correct_count = 0
+    total_points = 0
+    
+    for i, q in enumerate(questions):
+        if i < len(user_answers) and user_answers[i] == q.correct_option:
+            correct_count += 1
+            total_points += q.points
+            
+    # Natijani saqlash
+    result = ExamResult(
+        user_id=current_user.id,
+        exam_id=exam.id,
+        total_score=total_points,
+        section_scores=json.dumps({section.title: total_points})
+    )
+    db.session.add(result)
+    
+    # Foydalanuvchiga Global XP berish
+    # current_user.points += total_points # Agar points maydoni bo'lsa
+    # calculate_user_rank(current_user.id)
+    
+    db.session.commit()
+    
+    # Award XP
+    current_user.points += total_points
+    db.session.commit()
+    calculate_user_rank(current_user.id)
+    
+    # Notify parent
+    from telegram_bot import notify_parent
+    msg = (f"🔔 Farzandingiz {current_user.full_name or current_user.username} yangi imtihon topshirdi!\n\n"
+           f"📝 Imtihon: {exam.title}\n"
+           f"📊 Natija: {total_points} ball\n"
+           f"⭐ Jami ballar: {current_user.points}\n"
+           f"📅 Vaqt: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+    notify_parent(current_user, msg)
+    
+    return jsonify({'success': True, 'result_id': result.id})
+
+
+@app.route('/exams/results/<int:id>')
+@login_required
+def exam_result_detail(id):
+    """Imtihon natijasi tafsilotlari"""
+    result = ExamResult.query.get_or_404(id)
+    if result.user_id != current_user.id and current_user.role != 'admin':
+        flash('Ruxsat yo\'q! Bu natija boshqa foydalanuvchiga tegishli.', 'error')
+        return redirect(url_for('exam_hub'))
+        
+    section_scores = json.loads(result.section_scores)
+    return render_template('exams/result.html', result=result, section_scores=section_scores)
+
+@app.route('/dashboard', endpoint='dashboard')
 @login_required
 def dashboard():
     """Dashboard sahifasi - barcha ma'lumotlar DB dan"""
     
-    # Calculate total score from test results
-    test_results = TestResult.query.filter_by(user_id=current_user.id).all()
-    total_score = sum([r.score for r in test_results]) if test_results else 0
+    # Use persistent points field
+    total_score = current_user.points or 0
+
+    
+    # Get user groups
+    user_groups = [membership.group for membership in current_user.group_memberships]
     
     dashboard_data = {
         'overall_progress': current_user.get_overall_progress(),
@@ -257,7 +316,8 @@ def dashboard():
         },
         'recent_activity': current_user.get_recent_activity(),
         'recent_badges': [],
-        'next_recommendation': get_next_recommendation(current_user.id)
+        'next_recommendation': get_next_recommendation(current_user.id),
+        'user_groups': user_groups
     }
     
     return render_template('dashboard.html', **dashboard_data)
@@ -335,7 +395,7 @@ def achievements():
     # 2. Foydalanuvchi erishgan nishonlarni aniqlash
     user_badges = []
     tests_count = current_user.get_tests_taken()
-    total_score = sum([r.score for r in current_user.test_results]) if current_user.test_results else 0
+    total_score = current_user.points or 0
     has_perfect_score = any(r.score == 100 for r in current_user.test_results)
 
     if tests_count >= 1:
@@ -370,11 +430,11 @@ def achievements():
 
     gamification = {
         'points': total_score,
-        'level': current_user.rank or 1 # Agar rank raqam bo'lsa. String bo'lsa o'zgartirish kerak.
+        'level': current_user.rank or "Yangi a'zo"
     }
-    # Agar rank string bo'lsa, levelni hisoblaymiz
-    if isinstance(gamification['level'], str):
-         gamification['level'] = (total_score // 100) + 1
+    # Level calculation for progress bar if needed
+    current_level_num = (total_score // 500) + 1
+    gamification['level_num'] = current_level_num
 
     return render_template('achievements.html', 
                          all_badges=all_badges, 
@@ -501,169 +561,50 @@ def api_request_enrollment():
 def api_handle_enrollment():
     request_id = request.json.get('request_id')
     action = request.json.get('action') # accept, reject
+    group_id = request.json.get('group_id') # Required only for 'accept'
     
-    req = StudentRequest.query.get_or_404(request_id)
-    if req.teacher_id != current_user.id:
-        return jsonify({'error': 'Ruxsat berilmagan'}), 403
+    if not request_id or not action:
+        return jsonify({'error': 'Ma\'lumotlar yetarli emas'}), 400
+        
+    enroll_req = StudentRequest.query.get_or_404(request_id)
+    if enroll_req.teacher_id != current_user.id:
+        return jsonify({'error': 'Ruxsat yo\'q'}), 403
         
     if action == 'accept':
-        req.status = 'accepted'
-        # Add to teacher's first group or create one
-        group = Group.query.filter_by(teacher_id=current_user.id).first()
-        if not group:
-            # Create a default group
-            group = Group(
-                name="Sinfim",
-                teacher_id=current_user.id,
-                code=os.urandom(4).hex().upper()
-            )
-            db.session.add(group)
-            db.session.flush()
+        if not group_id:
+            return jsonify({'error': 'Guruh tanlanmagan'}), 400
             
-        # Add student to group
-        member = GroupMember(group_id=group.id, student_id=req.student_id)
-        db.session.add(member)
+        # Check if group belongs to this teacher
+        group = Group.query.get(group_id)
+        if not group or group.teacher_id != current_user.id:
+            return jsonify({'error': 'Guruh topilmadi yoki ruxsat yo\'q'}), 403
+            
+        # Check if already a member
+        existing = GroupMember.query.filter_by(group_id=group_id, student_id=enroll_req.student_id).first()
+        if not existing:
+            member = GroupMember(group_id=group_id, student_id=enroll_req.student_id)
+            db.session.add(member)
+            
+        enroll_req.status = 'accepted'
+        msg_content = f"Tabriklaymiz! O'qituvchi {current_user.full_name or current_user.username} sizni '{group.name}' guruhiga qabul qildi."
         
     elif action == 'reject':
-        req.status = 'rejected'
+        enroll_req.status = 'rejected'
+        msg_content = f"Uzr, o'qituvchi {current_user.full_name or current_user.username} sizning so'rovingizni rad etdi."
         
+    else:
+        return jsonify({'error': 'Noto\'g\'ri amal'}), 400
+        
+    # Send message to student
+    notification = Message(
+        sender_id=current_user.id,
+        recipient_id=enroll_req.student_id,
+        content=msg_content
+    )
+    db.session.add(notification)
     db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/api/ai/chat', methods=['POST'])
-@login_required
-def ai_chat():
-    """AI suhbat API"""
-    try:
-        data = request.get_json()
-        print(f"📨 Kelgan data: {data}")
-        
-        user_message = data.get('message', '').strip()
-        print(f"📝 Foydalanuvchi xabari: {user_message}")
-        
-        if not user_message:
-            return jsonify({
-                'success': False,
-                'response': "Iltimos, xabar kiriting."
-            })
-        
-        # Foydalanuvchi kontekstini olish
-        user_context = get_user_context(current_user)
-        print(f"👤 Foydalanuvchi konteksti: {user_context[:200]}...")
-        
-        # AI javobini olish
-        print("🔄 AI ga so'rov yuborilmoqda...")
-        ai_response = ai_assistant.generate_response(user_message, user_context)
-        print(f"🤖 AI javobi: {ai_response}")
-        
-        return jsonify({
-            'success': True,
-            'response': ai_response,
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        print(f"❌ Xatolik: {e}")
-        return jsonify({
-            'success': False,
-            'response': f"Xatolik yuz berdi: {str(e)}"
-        })
-
-@app.route('/api/ai/analyze_progress', methods=['POST'])
-@login_required
-def analyze_progress():
-    """Progress tahlili API"""
-    try:
-        user_context = get_user_context(current_user)
-        
-        analysis_prompt = """
-        Quyidagi o'quvchi statistikasini tahlil qiling va quyidagilarni tavsiya bering:
-        1. Kuchli tomonlari
-        2. Zaif tomonlari  
-        3. Takomillashtirish uchun tavsiyalar
-        4. Keyingi qadamlar
-        
-        Javob qisqa va amaliy bo'lsin.
-        """
-        
-        ai_response = ai_assistant.generate_response(analysis_prompt, user_context)
-        
-        return jsonify({
-            'success': True,
-            'analysis': ai_response,
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'analysis': f"Tahlil qilishda xatolik: {str(e)}"
-        })
-
-@app.route('/api/ai/subject_help', methods=['POST'])
-@login_required
-def subject_help():
-    """Fan bo'yicha yordam API"""
-    try:
-        data = request.get_json()
-        subject_name = data.get('subject', '')
-        topic = data.get('topic', '')
-        
-        user_context = get_user_context(current_user)
-        
-        help_prompt = f"""
-        {subject_name} fanining {topic} mavzusini tushuntirib bering.
-        Oddiy va tushunarli tilda, misollar bilan izohlang.
-        """
-        
-        ai_response = ai_assistant.generate_response(help_prompt, user_context)
-        
-        return jsonify({
-            'success': True,
-            'explanation': ai_response,
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'explanation': f"Tushuntirishda xatolik: {str(e)}"
-        })
-
-@app.route('/api/ai/test_advice', methods=['POST'])
-@login_required
-def test_advice():
-    """Testga tayyorgarlik bo'yicha maslahat"""
-    try:
-        data = request.get_json()
-        subject_name = data.get('subject', '')
-        
-        user_context = get_user_context(current_user)
-        
-        advice_prompt = f"""
-        {subject_name} fanidan testga qanday tayyorlanish kerak?
-        Quyidagilarni tavsiya bering:
-        1. Asosiy mavzular
-        2. Tushuncha tekshirish usullari
-        3. Vaqtni boshqarish
-        4. Test strategiyalari
-        
-        Javob qisqa va amaliy bo'lsin.
-        """
-        
-        ai_response = ai_assistant.generate_response(advice_prompt, user_context)
-        
-        return jsonify({
-            'success': True,
-            'advice': ai_response,
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'advice': f"Maslahat olishda xatolik: {str(e)}"
-        })
+    
+    return jsonify({'success': True, 'message': f'So\'rov {action} qilindi'})
 
 @app.route('/study_plans')
 @login_required
@@ -689,9 +630,10 @@ def settings():
 def leaderboard():
     """Reyting sahifasi"""
     # 1. O'quvchilar reytingi (Faqat studentlar)
+    # Optimized: using persistent points field
     student_scores = db.session.query(
         User,
-        db.func.coalesce(db.func.sum(TestResult.score), 0).label('total_score'),
+        User.points.label('total_score'),
         db.func.count(TestResult.id).label('tests_taken')
     ).filter(User.role == 'student').outerjoin(TestResult, User.id == TestResult.user_id).group_by(User.id).order_by(db.desc('total_score')).all()
     
@@ -757,11 +699,33 @@ def profile():
         .order_by(TestResult.completed_at.desc())\
         .limit(5)\
         .all()
+        
+    # Advanced Stats
+    stats = {
+        'total_tests': current_user.get_tests_taken(),
+        'avg_score': current_user.get_avg_test_score(),
+        'overall_progress': current_user.get_overall_progress(),
+        'best_subject': None,
+        'test_count_by_subject': {},
+        'monthly_activity': []
+    }
     
+    # Best subject calculation
+    best_progress = UserProgress.query.filter_by(user_id=current_user.id)\
+        .order_by(UserProgress.progress_percentage.desc()).first()
+    if best_progress:
+        subj = Subject.query.get(best_progress.subject_id)
+        if subj:
+            stats['best_subject'] = {
+                'name': subj.name,
+                'score': best_progress.progress_percentage
+            }
+            
     return render_template('profile.html', 
                          user=current_user,
                          subjects=subjects,
-                         recent_results=recent_results)
+                         recent_results=recent_results,
+                         stats=stats)
 
 @app.route('/api/update_avatar', methods=['POST'])
 @login_required
@@ -790,6 +754,11 @@ def api_update_profile():
     username = data.get('username', '').strip()
     email = data.get('email', '').strip()
     bio = data.get('bio', '').strip()
+    parent_telegram_username = data.get('parent_telegram_username', '').strip()
+    if parent_telegram_username.startswith('@'):
+        parent_telegram_username = parent_telegram_username[1:]
+
+
     
     # Validatsiya
     if not username or not email:
@@ -813,6 +782,13 @@ def api_update_profile():
         current_user.email = email
         current_user.bio = bio
         
+        current_user.parent_telegram_username = parent_telegram_username
+        # Reset chat_id if username changed to force re-linking
+        if parent_telegram_username != current_user.parent_telegram_username:
+            current_user.parent_telegram_chat_id = None
+
+
+        
         db.session.commit()
         return jsonify({'success': True})
         
@@ -828,6 +804,15 @@ def update_profile():
         current_user.full_name = request.form.get('full_name')
         current_user.bio = request.form.get('bio')
         current_user.avatar = request.form.get('avatar')
+        parent_telegram_username = request.form.get('parent_telegram_username', '').strip()
+        if parent_telegram_username.startswith('@'):
+            parent_telegram_username = parent_telegram_username[1:]
+            
+        if parent_telegram_username != current_user.parent_telegram_username:
+            current_user.parent_telegram_username = parent_telegram_username
+            current_user.parent_telegram_chat_id = None
+
+
         
         new_password = request.form.get('new_password')
         if new_password:
@@ -848,8 +833,46 @@ def api_start_test(subject_id):
     try:
         subject = Subject.query.get_or_404(subject_id)
         
-        # Misol savollar - keyinchalik Question modelidan olish mumkin
-        questions = generate_sample_questions(subject.name)
+        # Avval DB dan savollarni qidiramiz
+        db_questions = Question.query.filter_by(subject_id=subject.id).limit(10).all()
+        
+        questions = []
+        if db_questions:
+            for q in db_questions:
+                questions.append({
+                    'id': q.id,
+                    'question_text': q.question_text,
+                    'options': {
+                        'A': q.option_a,
+                        'B': q.option_b,
+                        'C': q.option_c,
+                        'D': q.option_d
+                    },
+                    'correct_option': q.correct_option
+                })
+        else:
+            # Agar DB da yo'q bo'lsa, AI orqali yaratishga harakat qilamiz yoki fallback
+            from ai_model import ai_assistant
+            difficulty = request.args.get('difficulty', 'advanced')
+            # Map difficulty to grade level
+            if difficulty == 'beginner':
+                grade = 5
+            elif difficulty == 'intermediate':
+                grade = 7
+            else:
+                grade = 9
+            ai_questions = ai_assistant.generate_unique_questions(subject.name, grade, 5)
+            for i, q in enumerate(ai_questions):
+                questions.append({
+                    'id': 1000 + i,
+                    'question_text': q.get('question', 'Savol?'),
+                    'options': q.get('options', {}),
+                    'correct_option': q.get('correct_answer', 'A')
+                })
+        
+        # Store question IDs and correct answers in session for secure grading
+        session['active_test_subject_id'] = subject.id
+        session['active_test_grading'] = {str(q['id']): q['correct_option'] for q in questions}
         
         return jsonify({
             'success': True,
@@ -860,71 +883,6 @@ def api_start_test(subject_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def generate_sample_questions(subject_name):
-    """Misol test savollarini yaratish"""
-    if 'matematika' in subject_name.lower():
-        return [
-            {
-                'id': 1,
-                'question_text': '2 + 2 nechaga teng?',
-                'options': {'A': '3', 'B': '4', 'C': '5', 'D': '6'},
-                'correct_option': 'B'
-            },
-            {
-                'id': 2,
-                'question_text': '5 × 3 nechaga teng?',
-                'options': {'A': '8', 'B': '12', 'C': '15', 'D': '18'},
-                'correct_option': 'C'
-            },
-            {
-                'id': 3,
-                'question_text': '10 - 4 nechaga teng?',
-                'options': {'A': '4', 'B': '5', 'C': '6', 'D': '7'},
-                'correct_option': 'C'
-            },
-            {
-                'id': 4,
-                'question_text': '8 ÷ 2 nechaga teng?',
-                'options': {'A': '2', 'B': '3', 'C': '4', 'D': '5'},
-                'correct_option': 'C'
-            },
-            {
-                'id': 5,
-                'question_text': '3² nechaga teng?',
-                'options': {'A': '6', 'B': '9', 'C': '12', 'D': '15'},
-                'correct_option': 'B'
-            }
-        ]
-    elif 'fizika' in subject_name.lower():
-        return [
-            {
-                'id': 1,
-                'question_text': 'Yerning tortishish tezlanishi qancha?',
-                'options': {'A': '5 m/s²', 'B': '9.8 m/s²', 'C': '12 m/s²', 'D': '15 m/s²'},
-                'correct_option': 'B'
-            },
-            {
-                'id': 2,
-                'question_text': 'Tezlik formulasi qanday?',
-                'options': {'A': 'v = s/t', 'B': 'v = t/s', 'C': 'v = s×t', 'D': 'v = s+t'},
-                'correct_option': 'A'
-            }
-        ]
-    else:
-        return [
-            {
-                'id': 1,
-                'question_text': f'{subject_name} fanining asosiy tushunchasi nima?',
-                'options': {'A': 'Tushuncha A', 'B': 'Tushuncha B', 'C': 'Tushuncha C', 'D': 'Tushuncha D'},
-                'correct_option': 'A'
-            },
-            {
-                'id': 2,
-                'question_text': f'{subject_name} fanida qanday usullar qo\'llaniladi?',
-                'options': {'A': 'Usul 1', 'B': 'Usul 2', 'C': 'Usul 3', 'D': 'Usul 4'},
-                'correct_option': 'B'
-            }
-        ]
 
 @app.route('/api/submit_test', methods=['POST'])
 @login_required
@@ -933,12 +891,29 @@ def api_submit_test():
     try:
         data = request.get_json()
         subject_id = data.get('subject_id')
-        subject_name = data.get('subject_name')
-        user_answers = data.get('answers', {})
-        score = data.get('score', 0)
-        correct_answers = data.get('correct_answers', 0)
-        total_questions = data.get('total_questions', 0)
+        user_answers = data.get('answers', {}) # Dict of {q_id: answer}
         
+        # Verify session
+        saved_subject_id = session.get('active_test_subject_id')
+        grading_map = session.get('active_test_grading', {})
+        
+        if not grading_map or saved_subject_id != subject_id:
+            return jsonify({'error': 'Sessiya xatosi yoki test muddati o\'tgan'}), 400
+
+        # Server-side grading
+        correct_count = 0
+        total_questions = len(grading_map)
+        
+        for q_id_str, correct_ans in grading_map.items():
+            user_ans = str(user_answers.get(q_id_str, '')).strip().upper()
+            correct_ans = str(correct_ans or '').strip().upper()
+            
+            if user_ans and correct_ans and user_ans[0] == correct_ans[0]:
+                correct_count += 1
+                
+        score = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
+        earned_points = score * 10 # Calculated securely on server
+
         # Subjectni topish
         subject = Subject.query.get(subject_id)
         if not subject:
@@ -950,7 +925,8 @@ def api_submit_test():
             subject_id=subject.id,
             score=score,
             total_questions=total_questions,
-            correct_answers=correct_answers
+            correct_answers=correct_count,
+            points=earned_points
         )
         db.session.add(test_result)
         
@@ -970,12 +946,30 @@ def api_submit_test():
             )
             db.session.add(user_progress)
         
+        # Award XP to user
+        current_user.points += earned_points
+        
+        # Clear session
+        session.pop('active_test_subject_id', None)
+        session.pop('active_test_grading', None)
+        
         db.session.commit()
+        calculate_user_rank(current_user.id)
+        
+        # Notify parent
+        from telegram_bot import notify_parent
+        msg = (f"🔔 Farzandingiz {current_user.full_name or current_user.username} yangi test topshirdi!\n\n"
+               f"📚 Fan: {subject.name}\n"
+               f"📊 Natija: {score}%\n"
+               f"✅ To'g'ri javoblar: {correct_count}/{total_questions}\n"
+               f"⭐ Jami ballar: {current_user.points}\n"
+               f"📅 Vaqt: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        notify_parent(current_user, msg)
         
         return jsonify({
             'success': True, 
             'score': score,
-            'points': score * 10,  # Ballarni hisoblash
+            'points': earned_points,
             'message': 'Test natijalari muvaffaqiyatli saqlandi!'
         })
         
@@ -986,16 +980,20 @@ def api_submit_test():
 @app.route('/api/voice_query', methods=['POST'])
 @login_required
 def api_voice_query():
+    """AI Tutor ovozli/matnli so'rov API"""
+    from ai_model import ai_assistant
     data = request.get_json()
-    responses = [
-        "Bu juda yaxshi savol! Men sizga yordam berishdan xursandman.",
-        "Keling, bu mavzuni batafsil o'rganamiz.",
-        "Sizning savolingizni tushundim. Quyidagi misol orqali tushuntiraman.",
-        "Ajoyib savol! Buni quyidagi usulda yechish mumkin."
-    ]
+    user_query = data.get('query', '')
+    
+    if not user_query:
+        return jsonify({'success': False, 'error': 'So\'rov bo\'sh'})
+    
+    user_context = f"Foydalanuvchi: {current_user.username}, Rol: {current_user.role}"
+    response_text = ai_assistant.generate_response(user_query, user_context)
+    
     return jsonify({
         'success': True,
-        'response': random.choice(responses)
+        'response': response_text
     })
 
 @app.route('/api/progress_data')
@@ -1478,18 +1476,21 @@ def admin_content():
     books = Literature.query.all()
     return render_template('admin/content_manager.html', subjects=subjects, books=books)
 
+
 @app.route('/admin/subject/<int:id>/delete', methods=['POST'])
 @admin_required
 def delete_subject(id):
+    """Fanni o'chirish"""
     subject = Subject.query.get_or_404(id)
-    # Check for related data
-    if UserProgress.query.filter_by(subject_id=id).first():
-        flash('Bu fanga bog\'liq ma\'lumotlar (progress) mavjud, o\'chirib bo\'lmaydi!', 'error')
-    else:
-        return redirect(url_for('subject_detail', id=sub.id))
-    
-    flash('Fan topilmadi', 'error')
-    return redirect(url_for('learning_center'))
+    try:
+        db.session.delete(subject)
+        db.session.commit()
+        flash('Fan muvaffaqiyatli o\'chirildi', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Xato: Fan o\'chirib bo\'lmadi. Unga bog\'liq ma\'lumotlar mavjud.', 'error')
+    return redirect(url_for('admin_content'))
+
 
 @app.route('/ai-tutor')
 @login_required
@@ -2067,10 +2068,14 @@ def take_quiz(id):
         questions = ai_assistant.generate_unique_questions(topic, grade, count)
         
         # Savollarni sessiyada saqlash (grading uchun)
+        import hashlib
+        q_hash = hashlib.md5(json.dumps(questions).encode()).hexdigest()
+        
         session['unique_quiz_id'] = id
         session['unique_quiz_questions'] = questions
+        session['unique_quiz_hash'] = q_hash
         
-        return render_template('student/take_quiz_unique.html', quiz=quiz, questions=questions)
+        return render_template('student/take_quiz_unique.html', quiz=quiz, questions=questions, quiz_hash=q_hash)
         
     return render_template('student/take_quiz.html', quiz=quiz)
 
@@ -2095,9 +2100,11 @@ def submit_quiz(id):
     if quiz.is_unique:
         questions = session.get('unique_quiz_questions', [])
         saved_quiz_id = session.get('unique_quiz_id')
+        saved_q_hash = session.get('unique_quiz_hash')
+        user_q_hash = request.form.get('quiz_hash')
         
-        if not questions or saved_quiz_id != id:
-            flash('Sessiya muddati tugagan yoki xatolik yuz berdi.', 'error')
+        if not questions or saved_quiz_id != id or saved_q_hash != user_q_hash:
+            flash('Sessiya muddati tugagan yoki xatolik yuz berdi. Iltimos testni qaytadan boshlang.', 'error')
             return redirect(url_for('student_quizzes'))
             
         total_q_count = len(questions)
@@ -2105,8 +2112,15 @@ def submit_quiz(id):
         detailed_snapshot = []
         
         for i, q in enumerate(questions):
-            user_answer = request.form.get(f'question_{i}')
-            is_correct = (user_answer == q['correct_answer'])
+            user_answer = str(request.form.get(f'question_{i}', '')).strip().upper()
+            correct_answer = str(q.get('correct_answer', '')).strip().upper()
+            
+            # Robust check: if AI returns "A) ..." or just "A"
+            if len(user_answer) > 0 and len(correct_answer) > 0:
+                is_correct = (user_answer[0] == correct_answer[0])
+            else:
+                is_correct = (user_answer == correct_answer)
+                
             if is_correct:
                 correct_count += 1
             
@@ -2135,8 +2149,13 @@ def submit_quiz(id):
         for question in quiz.questions:
             q_id = str(question.id)
             if question.question_type == 'multi' or question.question_type == None:
-                user_answer = request.form.get(f'question_{q_id}')
-                if user_answer == question.correct_option:
+                user_answer = str(request.form.get(f'question_{q_id}', '')).strip().upper()
+                correct_answer = str(question.correct_option or '').strip().upper()
+                
+                if len(user_answer) > 0 and len(correct_answer) > 0:
+                    if user_answer[0] == correct_answer[0]:
+                        student_score_points += question.points
+                elif user_answer == correct_answer:
                     student_score_points += question.points
                     
             # 2. Matching
@@ -2148,9 +2167,13 @@ def submit_quiz(id):
                 keys = list(correct_pairs.keys())
                 for i, left_key in enumerate(keys):
                     idx = i + 1
-                    user_val = request.form.get(f'question_{q_id}_{idx}')
-                    correct_val_pair = correct_pairs[left_key]
-                    if user_val == correct_val_pair:
+                    user_val = str(request.form.get(f'question_{q_id}_{idx}', '')).strip().upper()
+                    correct_val_pair = str(correct_pairs.get(left_key, '')).strip().upper()
+                    
+                    if len(user_val) > 0 and len(correct_val_pair) > 0:
+                        if user_val[0] == correct_val_pair[0]:
+                            correct_matches += 1
+                    elif user_val == correct_val_pair:
                         correct_matches += 1
                 
                 if pairs_count > 0:
@@ -2182,6 +2205,10 @@ def submit_quiz(id):
             final_score = int((student_score_points / total_max_points) * 100)
         correct_val = int(student_score_points)
 
+    # Award XP
+    earned_points = int(final_score * 10 if not quiz.is_unique else final_score * 15)
+    current_user.points += earned_points
+    
     # 3. Save Unified Result
     result = TestResult(
         user_id=current_user.id,
@@ -2190,6 +2217,7 @@ def submit_quiz(id):
         score=final_score,
         total_questions=total_q_count,
         correct_answers=correct_val,
+        points=earned_points,
         unique_questions_snapshot=snapshot
     )
     
@@ -2203,6 +2231,16 @@ def submit_quiz(id):
             progress.last_activity = datetime.now()
             
     db.session.commit()
+    
+    # Notify parent
+    from telegram_bot import notify_parent
+    quiz_type = "AI Unique Quiz" if quiz.is_unique else "Standard Quiz"
+    msg = (f"🔔 Farzandingiz {current_user.full_name or current_user.username} '{quiz.title}' ({quiz_type}) topshirdi!\n\n"
+           f"📊 Natija: {final_score}%\n"
+           f"⭐ Olingan ball: {earned_points}\n"
+           f"🌟 Jami ballar: {current_user.points}\n"
+           f"📅 Vaqt: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+    notify_parent(current_user, msg)
     
     # Update Rank Automatically
     calculate_user_rank(current_user.id)
@@ -2221,8 +2259,9 @@ def submit_quiz(id):
 def student_result_detail(id):
     """O'quvchi uchun test natijasi tafsilotlari"""
     result = TestResult.query.get_or_404(id)
-    if result.user_id != current_user.id:
-        flash('Ruxsat yo\'q!', 'error')
+    # Strict ownership check
+    if result.user_id != current_user.id and current_user.role != 'admin':
+        flash('Ruxsat yo\'q! Bu natija boshqa foydalanuvchiga tegishli.', 'error')
         return redirect(url_for('dashboard'))
     
     quiz = Quiz.query.get(result.quiz_id) if result.quiz_id else None
@@ -2244,10 +2283,23 @@ def teacher_result_detail(id):
     """O'qituvchi uchun o'quvchi natijasi tafsilotlari"""
     result = TestResult.query.get_or_404(id)
     
-    # Check if teacher owns the quiz or group
+    # Check if teacher has authority
+    is_owner = False
     quiz = Quiz.query.get(result.quiz_id) if result.quiz_id else None
-    if quiz and quiz.teacher_id != current_user.id:
-        flash('Ruxsat yo\'q!', 'error')
+    if quiz and quiz.teacher_id == current_user.id:
+        is_owner = True
+    else:
+        # Check if student is in any group taught by this teacher
+        teacher_groups = [g.id for g in current_user.groups_taught]
+        membership = GroupMember.query.filter(
+            GroupMember.student_id == result.user_id,
+            GroupMember.group_id.in_(teacher_groups)
+        ).first()
+        if membership:
+            is_owner = True
+            
+    if not is_owner and current_user.role != 'admin':
+        flash('Ruxsat yo\'q! Bu o\'quvchi sizning guruhingizda emas.', 'error')
         return redirect(url_for('teacher_dashboard'))
         
     snapshot = None
@@ -2261,10 +2313,10 @@ def teacher_result_detail(id):
                          student=User.query.get(result.user_id))
 
 # Initialize DB on startup (required for production like Gunicorn)
-init_db()
+# init_db()  # Redundant, already called at line 151 within context
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"[*] EDUAI Pro ishga tushmoqda... Port: {port}")
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)
 

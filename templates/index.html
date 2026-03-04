@@ -10,65 +10,66 @@
                 <i class="fas fa-robot me-3"></i>EDUAI Pro
             </h1>
             <p class="lead fs-4 mb-4">Sun'iy intellekt asosidagi shaxsiylashtirilgan o'qituvchi tizimi</p>
-            <p class="text-muted mb-4">Har bir o'quvchi uchun moslashtirilgan darslar, testlar va ovozli yordamchi bilan zamonaviy ta'lim</p>
-            
+            <p class="text-muted mb-4">Har bir o'quvchi uchun moslashtirilgan darslar, testlar va ovozli yordamchi bilan
+                zamonaviy ta'lim</p>
+
             <div class="mt-5">
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3 px-4 py-2">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-premium btn-lg me-3">
                     <i class="fas fa-user-plus me-2"></i>Ro'yxatdan o'tish
                 </a>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4 py-2">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg rounded-pill px-4">
                     <i class="fas fa-sign-in-alt me-2"></i>Kirish
                 </a>
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-6">
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card h-100 border-0 soft-card">
                     <div class="card-body text-center p-4">
                         <div class="feature-icon mb-3">
-                            <i class="fas fa-brain fa-3x text-success"></i>
+                            <i class="fas fa-brain fa-3x text-primary"></i>
                         </div>
-                        <h5 class="card-title">Adaptiv O'qitish</h5>
-                        <p class="card-text">AI har bir o'quvchi darajasiga mos darslar tayyorlaydi</p>
+                        <h5 class="card-title fw-bold">Adaptiv O'qitish</h5>
+                        <p class="card-text text-muted">AI har bir o'quvchi darajasiga mos darslar tayyorlaydi</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card h-100 border-0 soft-card">
                     <div class="card-body text-center p-4">
                         <div class="feature-icon mb-3">
-                            <i class="fas fa-microphone fa-3x text-info"></i>
+                            <i class="fas fa-microphone fa-3x text-success"></i>
                         </div>
-                        <h5 class="card-title">Ovozli Yordamchi</h5>
-                        <p class="card-text">Mikrofon orqali savol berishingiz mumkin</p>
+                        <h5 class="card-title fw-bold">Ovozli Yordamchi</h5>
+                        <p class="card-text text-muted">Mikrofon orqali savol berishingiz mumkin</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card h-100 border-0 soft-card">
                     <div class="card-body text-center p-4">
                         <div class="feature-icon mb-3">
                             <i class="fas fa-gamepad fa-3x text-warning"></i>
                         </div>
-                        <h5 class="card-title">O'yinlashtirish</h5>
-                        <p class="card-text">Ballar, nishonlar va mukofotlar bilan o'rganing</p>
+                        <h5 class="card-title fw-bold">O'yinlashtirish</h5>
+                        <p class="card-text text-muted">Ballar, nishonlar va mukofotlar bilan o'rganing</p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
-                <div class="card h-100 border-0 shadow-sm">
+                <div class="card h-100 border-0 soft-card">
                     <div class="card-body text-center p-4">
                         <div class="feature-icon mb-3">
                             <i class="fas fa-chart-line fa-3x text-danger"></i>
                         </div>
-                        <h5 class="card-title">Detal Statistikalar</h5>
-                        <p class="card-text">Progressingizni kuzatib boring</p>
+                        <h5 class="card-title fw-bold">Detal Statistikalar</h5>
+                        <p class="card-text text-muted">Progressingizni kuzatib boring</p>
                     </div>
                 </div>
             </div>
@@ -111,27 +112,30 @@
 
 {% block extra_css %}
 <style>
-.min-vh-80 {
-    min-height: 80vh;
-}
-.feature-icon {
-    transition: transform 0.3s ease;
-}
-.card:hover .feature-icon {
-    transform: scale(1.1);
-}
-.step-number {
-    width: 60px;
-    height: 60px;
-    background: #007bff;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0 auto 1rem;
-}
+    .min-vh-80 {
+        min-height: 80vh;
+    }
+
+    .feature-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover .feature-icon {
+        transform: scale(1.1);
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 auto 1rem;
+    }
 </style>
 {% endblock %}

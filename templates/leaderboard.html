@@ -229,19 +229,19 @@
 
                 let btnHtml = '';
                 const currentUserId = '{{ current_user.id }}';
-            const currentUserRole = '{{ current_user.role }}';
+                const currentUserRole = '{{ current_user.role }}';
 
-            if (data.role === 'teacher' && data.id != currentUserId && currentUserRole === 'student') {
-                if (data.request_status === 'pending') {
-                    btnHtml = '<button class="btn btn-secondary w-100 rounded-pill mt-3" disabled>So\'rov kutilmoqda</button>';
-                } else if (data.request_status === 'accepted') {
-                    btnHtml = '<button class="btn btn-success w-100 rounded-pill mt-3" disabled><i class="fas fa-check me-2"></i>O\'quvchisiz</button>';
-                } else {
-                    btnHtml = `<button class="btn btn-primary w-100 rounded-pill mt-3" onclick="requestEnroll(${data.id})">O'quvchi bo'lish</button>`;
+                if (data.role === 'teacher' && data.id != currentUserId && currentUserRole === 'student') {
+                    if (data.request_status === 'pending') {
+                        btnHtml = '<button class="btn btn-secondary w-100 rounded-pill mt-3" disabled>So\'rov kutilmoqda</button>';
+                    } else if (data.request_status === 'accepted') {
+                        btnHtml = '<button class="btn btn-success w-100 rounded-pill mt-3" disabled><i class="fas fa-check me-2"></i>O\'quvchisiz</button>';
+                    } else {
+                        btnHtml = `<button class="btn btn-primary w-100 rounded-pill mt-3" onclick="requestEnroll(${data.id})">O'quvchi bo'lish</button>`;
+                    }
                 }
-            }
 
-            contentArea.innerHTML = `
+                contentArea.innerHTML = `
                 <div class="text-center mb-4">
                     <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
                     <div class="avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #eee;">
@@ -273,11 +273,11 @@
                 </div>
                 ${btnHtml}
             `;
-        } catch (e) {
-            contentArea.innerHTML = `<div class="alert alert-danger">Xatolik: ${e.message}</div>`;
-        }
+            } catch (e) {
+                contentArea.innerHTML = `<div class="alert alert-danger">Xatolik: ${e.message}</div>`;
+            }
+        });
     });
-});
 
     async function requestEnroll(teacherId) {
         if (!confirm("O'qituvchiga o'quvchi bo'lish uchun so'rov yubormoqchimisiz?")) return;

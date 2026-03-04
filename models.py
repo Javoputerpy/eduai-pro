@@ -19,6 +19,10 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     is_active = db.Column(db.Boolean, default=True)
     rank = db.Column(db.String(50), default='Yangi a\'zo')
+    parent_telegram_username = db.Column(db.String(32), nullable=True)
+    parent_telegram_chat_id = db.Column(db.String(20), nullable=True)
+    points = db.Column(db.Integer, default=0)
+
 
     # Relationships
     progress = db.relationship('UserProgress', backref='user', lazy=True)
@@ -121,6 +125,7 @@ class Announcement(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 class UserProgress(db.Model):
+    __table_args__ = (db.UniqueConstraint('user_id', 'subject_id', name='_user_subject_uc'),)
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
@@ -136,6 +141,7 @@ class TestResult(db.Model):
     total_questions = db.Column(db.Integer, nullable=False)
     correct_answers = db.Column(db.Integer, nullable=False)
     completed_at = db.Column(db.DateTime, default=datetime.now)
+    points = db.Column(db.Integer, default=0)
     unique_questions_snapshot = db.Column(db.Text) # JSON string
     
     subject = db.relationship('Subject', backref='test_results')
@@ -167,6 +173,7 @@ class Group(db.Model):
     assignments = db.relationship('Assignment', backref='group', lazy=True)
 
 class GroupMember(db.Model):
+    __table_args__ = (db.UniqueConstraint('group_id', 'student_id', name='_group_student_uc'),)
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -209,17 +216,66 @@ class Literature(db.Model):
     
     uploader = db.relationship('User', backref='uploaded_books')
 
+class Exam(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False) # e.g., "SAT Practice Test #1"
+    exam_type = db.Column(db.String(50), nullable=False) # SAT, IELTS, MS
+    description = db.Column(db.Text)
+    duration_minutes = db.Column(db.Integer, default=180)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    sections = db.relationship('ExamSection', backref='exam', lazy=True, cascade="all, delete-orphan")
+
+class ExamSection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False) # e.g., "Math (No Calculator)"
+    order = db.Column(db.Integer, default=0)
+    duration_minutes = db.Column(db.Integer, default=0)
+    
+    questions = db.relationship('ExamQuestion', backref='section', lazy=True, cascade="all, delete-orphan")
+
+class ExamQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    section_id = db.Column(db.Integer, db.ForeignKey('exam_section.id'), nullable=False)
+    question_text = db.Column(db.Text, nullable=False)
+    question_type = db.Column(db.String(20), default='multi') # multi, text
+    option_a = db.Column(db.String(500))
+    option_b = db.Column(db.String(500))
+    option_c = db.Column(db.String(500))
+    option_d = db.Column(db.String(500))
+    correct_option = db.Column(db.String(1))
+    correct_text = db.Column(db.Text) # For open-ended questions
+    points = db.Column(db.Integer, default=10)
+
+class ExamResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    total_score = db.Column(db.Integer, nullable=False)
+    section_scores = db.Column(db.Text) # JSON string: {"Math": 750, "Reading": 680}
+    completed_at = db.Column(db.DateTime, default=datetime.now)
+    
+    user = db.relationship('User', backref='exam_results')
+    exam = db.relationship('Exam', backref='user_results')
+
 # Helper functions
 def calculate_user_rank(user_id):
     user = db.session.get(User, user_id)
     if not user: return
-    total_score = db.session.query(db.func.sum(TestResult.score)).filter_by(user_id=user_id).scalar() or 0
+    
+    # Use persistent points field
+    total_score = user.points or 0
     new_rank = user.rank
-    if total_score >= 3000: new_rank = "Ekspert"
+    
+    if total_score >= 5000: new_rank = "Afsonaviy Bilimdon"
+    elif total_score >= 3000: new_rank = "Ekspert"
     elif total_score >= 1500: new_rank = "Mutaxassis"
     elif total_score >= 500: new_rank = "Bilimdon"
     elif total_score >= 100: new_rank = "Havaskor"
     else: new_rank = "Yangi a'zo"
+    
     if user.rank != new_rank:
         user.rank = new_rank
         db.session.commit()

@@ -34,17 +34,17 @@
     }
 
     .btn-premium {
-        background: linear-gradient(to right, #4F46E5, #6366F1);
+        background: var(--primary-gradient, linear-gradient(to right, #4F46E5, #6366F1));
         border: none;
         padding: 0.8rem;
         border-radius: 0.75rem;
         font-weight: 600;
-        transition: transform 0.2s;
+        transition: all 0.2s ease;
     }
 
     .btn-premium:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
 
     .social-btn {
@@ -88,13 +88,13 @@
                 style="width: 400px; height: 400px; top: -100px; left: -100px;"></div>
             <div class="position-absolute rounded-circle bg-white opacity-10"
                 style="width: 300px; height: 300px; bottom: 50px; right: 50px;"></div>
- 
+
             <div class="z-1 text-center animate-float">
                 <div class="glass-effect rounded-4 p-4 mb-4 d-inline-block">
                     <i class="fas fa-brain display-1"></i>
                 </div>
-                <h1 class="display-4 fw-bold mb-3"style="color: #000;">EDUAI Pro</h1>
-                <p class="fs-5 opacity-75 mb-4"style="color: #000;">Sun'iy intellekt kelajak ta'limi xizmatida</p>
+                <h1 class="display-4 fw-bold mb-3 text-white">EDUAI Pro</h1>
+                <p class="fs-5 opacity-75 mb-4 text-white">Sun'iy intellekt kelajak ta'limi xizmatida</p>
             </div>
         </div>
 
@@ -106,7 +106,7 @@
                     <p class="text-muted">Tizimga kirish uchun ma'lumotlaringizni kiriting</p>
                 </div>
 
-                <form method="POST" action="{{ url_for('login') }}">
+                <form method="POST" action="{{ url_for('auth.login') }}">
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-uppercase text-muted">Username</label>
                         <input type="text" name="username" class="form-control form-control-premium" placeholder="Login"
@@ -142,7 +142,7 @@
                 </form>
 
                 <p class="text-center mt-5 text-muted">
-                    Hisobingiz yo'qmi? <a href="{{ url_for('register') }}"
+                    Hisobingiz yo'qmi? <a href="{{ url_for('auth.register') }}"
                         class="text-primary fw-bold text-decoration-none">Ro'yxatdan o'ting</a>
                 </p>
             </div>

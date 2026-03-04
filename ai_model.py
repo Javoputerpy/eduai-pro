@@ -3,6 +3,9 @@ import requests
 import json
 import random
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class GroqAIAssistant:
     def __init__(self):
@@ -134,6 +137,55 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
             ]
             return random.choice(responses)
 
+    def _parse_json_robustly(self, text):
+        """AI javobidan JSON ni xavfsiz va barqaror ajratib olish"""
+        if not text:
+            return None
+            
+        import re
+        
+        # 1. Markdown code bloklarini qidirish
+        code_block_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
+        if code_block_match:
+            candidate = code_block_match.group(1).strip()
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                pass
+                
+        # 2. To'g'ridan-to'g'ri qavslarni qidirish [ ] yoki { }
+        # Eng tashqi qavslarni topamiz
+        array_match = re.search(r'\[\s*\{[\s\S]*\}\s*\]', text)
+        if array_match:
+            try:
+                return json.loads(array_match.group(0))
+            except json.JSONDecodeError:
+                pass
+                
+        object_match = re.search(r'\{\s*".*":[\s\S]*\}', text)
+        if object_match:
+            try:
+                return json.loads(object_match.group(0))
+            except json.JSONDecodeError:
+                pass
+                
+        # 3. Agar bular ishlamasa, qat'iy tozalab urinib ko'ramiz
+        # Matn ichidagi barcha ortiqcha belgilarni olib tashlash (fringe cases)
+        try:
+            # JSON boshlanish va tugash joyini topamiz
+            start_idx = text.find('[')
+            if start_idx == -1: start_idx = text.find('{')
+            
+            end_idx = text.rfind(']')
+            if end_idx == -1: end_idx = text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                return json.loads(text[start_idx:end_idx+1])
+        except:
+            pass
+            
+        return None
+
     def _normalize_questions(self, questions):
         """AI tomonidan qaytarilgan JSON kalitlarini standartlashtirish (Uzbek -> English)"""
         if not isinstance(questions, list):
@@ -161,14 +213,23 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
             # Majburiy maydonlar mavjudligini tekshirish
             if 'question' not in new_q: new_q['question'] = "Savol topilmadi"
             if 'options' not in new_q: new_q['options'] = {"A": "-", "B": "-", "C": "-", "D": "-"}
-            if 'correct_answer' not in new_q: new_q['correct_answer'] = "A"
+            
+            # To'g'ri javobni formatlash (Faqat bitta harf A, B, C, D ekanligiga ishonch hosil qilish)
+            raw_correct = str(new_q.get('correct_answer', 'A')).strip().upper()
+            if len(raw_correct) > 0:
+                # Agar "A) ..." ko'rinishida bo'lsa, birinchi harfni oladi
+                import re
+                match = re.search(r'[A-D]', raw_correct)
+                new_q['correct_answer'] = match.group(0) if match else raw_correct[0]
+            else:
+                new_q['correct_answer'] = "A"
             
             normalized.append(new_q)
         return normalized
 
     def generate_quiz_from_text(self, text):
         """Matndan testlar tuzish"""
-        prompt = """
+        prompt = f"""
         Quyidagi matndan 5 ta test savolini tuzib ber.
         
         MUHIM QOIDA: 
@@ -178,43 +239,37 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
         
         Format aniq shunday bo'lsin:
         [
-            {
+            {{
                 "question": "Savol matni",
-                "options": {
+                "options": {{
                     "A": "Variant A",
                     "B": "Variant B",
                     "C": "Variant C",
                     "D": "Variant D"
-                },
+                }},
                 "correct_answer": "A"
-            }
+            }}
         ]
         
-        Matn:
-        """ + text[:2000]
+        Matn (Mavzu):
+        <<<
+        {text[:2000]}
+        >>>
+        """
 
         try:
-            import re
-            response = self.generate_response(prompt, "O'qituvchi test tuzmoqchi")
+            response_text = self.generate_response(prompt, "O'qituvchi test tuzmoqchi")
+            questions = self._parse_json_robustly(response_text)
             
-            if "```" in response:
-                if "```json" in response:
-                    response = response.split("```json")[1].split("```")[0]
-                else:
-                    response = response.split("```")[1].split("```")[0]
-            
-            response = response.strip()
-            
-            # Try to extract array with Regex
-            match = re.search(r'\[.*\]', response, re.DOTALL)
-            if match:
-                response = match.group(0)
-            
-            questions = json.loads(response)
-            return self._normalize_questions(questions)
+            if questions:
+                return self._normalize_questions(questions)
+            else:
+                raise ValueError("JSON parsing failed")
                 
         except Exception as e:
-            print(f"Quiz Generation Error: {e}")
+            print(f"[!] Quiz Generation Error: {e}")
+            if 'response' in locals():
+                print(f"[!] Full AI Response: {response}")
             return [
                 {
                     "question": "AI test tuza olmadi (API Xatosi). Bu namuna savol.",
@@ -235,6 +290,7 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
         MUHIM QOIDA:
         1. Kalitlar (keys) FAQAT ingliz tilida: "question", "options", "correct_answer".
         2. Javobni FAQAT va FAQAT JSON formatida qaytar. Hech qanday kirish so'zlari ishlatma.
+        3. To'g'ri javobni (correct_answer) doimo bir xil harf (masalan, faqat A) qilma! Javoblar A, B, C yoki D orasida tasodifiy taqsimlansin.
         
         Format:
         [
@@ -246,23 +302,23 @@ Muhim: Faqat O'ZBEKCHA javob bering!"""
                     "C": "Variant C",
                     "D": "Variant D"
                 }},
-                "correct_answer": "A"
+                "correct_answer": "B"
             }}
         ]
         """
 
         try:
-            response = self.generate_response(prompt, "Unique test generation")
-            import re
-            match = re.search(r'\[.*\]', response, re.DOTALL)
-            if match:
-                response = match.group(0)
+            response_text = self.generate_response(prompt, "Unique test generation")
+            questions = self._parse_json_robustly(response_text)
             
-            response = response.strip()
-            questions = json.loads(response)
-            return self._normalize_questions(questions)
+            if questions:
+                return self._normalize_questions(questions)
+            else:
+                raise ValueError("JSON parsing failed")
         except Exception as e:
-            print(f"Unique Quiz Generation Error: {e}")
+            print(f"[!] Unique Quiz Generation Error: {e}")
+            if 'response' in locals():
+                print(f"[!] Full AI Response: {response}")
             return self._normalize_questions([
                 {
                     "question": f"{topic} mavzusi bo'yicha {grade}-sinf uchun savol (AI Xatosi)",
