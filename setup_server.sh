@@ -21,17 +21,18 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE eduai_db TO eduai_use
 sudo -u postgres psql -c "ALTER DATABASE eduai_db OWNER TO eduai_user;"
 echo "PostgreSQL ready."
 
-# --- 3. Create .env file interactively ---
-echo ""
-echo "[3/8] Setting up .env file..."
-echo "Enter your API keys below. Press Enter to skip optional keys."
-echo ""
-read -p "GROQ_API_KEY (required - for AI features): " GROQ_KEY
-read -p "TELEGRAM_BOT_TOKEN (for parent notifications): " TG_TOKEN
-read -p "GOOGLE_CLIENT_ID (optional - for Google login): " G_ID
-read -p "GOOGLE_CLIENT_SECRET (optional - for Google login): " G_SECRET
+# --- 3. Create .env file if not exists ---
+if [ ! -f /var/www/eduai/.env ]; then
+    echo ""
+    echo "[3/8] Setting up environment variables..."
+    echo "Enter your API keys below. Press Enter to skip optional keys."
+    echo ""
+    read -p "GROQ_API_KEY (required): " GROQ_KEY
+    read -p "TELEGRAM_BOT_TOKEN: " TG_TOKEN
+    read -p "GOOGLE_CLIENT_ID (optional): " G_ID
+    read -p "GOOGLE_CLIENT_SECRET (optional): " G_SECRET
 
-cat > /var/www/eduai/.env << ENVEOF
+    cat > /var/www/eduai/.env << ENVEOF
 SECRET_KEY=EduAiProSuperSecretKey2026XYZ
 DATABASE_URL=postgresql://eduai_user:EduAiSecure2026!@localhost/eduai_db
 GROQ_API_KEY=${GROQ_KEY}
@@ -40,31 +41,27 @@ GOOGLE_CLIENT_ID=${G_ID}
 GOOGLE_CLIENT_SECRET=${G_SECRET}
 FLASK_ENV=production
 ENVEOF
-echo ".env file created."
+    echo ".env file created."
+else
+    echo "[3/8] .env file already exists, skipping..."
+fi
 
 # --- 4. Setup Python virtual environment ---
 echo "[4/8] Setting up Python venv..."
 cd /var/www/eduai
-rm -rf venv
-python3 -m venv venv
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-echo "Python packages installed."
+echo "Python packages ready."
 
 # --- 5. Initialize database tables ---
 echo "[5/8] Creating database tables..."
-python3 << PYEOF
-import os, sys
-sys.path.insert(0, '/var/www/eduai')
-os.chdir('/var/www/eduai')
-from dotenv import load_dotenv
-load_dotenv()
-from app import app, db
-with app.app_context():
-    db.create_all()
-    print('All database tables created!')
-PYEOF
+source venv/bin/activate
+export PYTHONPATH=$PYTHONPATH:/var/www/eduai
+python3 -c "import os; from app import app, db; app.app_context().push(); db.create_all(); print('Database tables ready!')"
 
 # --- 6. Create Gunicorn systemd service ---
 echo "[6/8] Creating systemd service..."
