@@ -2329,6 +2329,10 @@ def teacher_result_detail(id):
                          snapshot=snapshot,
                          student=User.query.get(result.user_id))
 
+@app.route('/google4d7a778099eaae6a.html')
+def google_verification():
+    return app.send_static_file('google4d7a778099eaae6a.html')
+
 @app.route('/robots.txt')
 def robots():
     return app.send_static_file('robots.txt')
