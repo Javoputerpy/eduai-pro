@@ -240,7 +240,10 @@ def api_submit_exam():
     for i, q in enumerate(questions):
         if i < len(user_answers) and user_answers[i] == q.correct_option:
             correct_count += 1
-            total_points += q.points
+            
+    score_percentage = int((correct_count / len(questions)) * 100) if len(questions) > 0 else 0
+    earned_points = int(score_percentage * 300 / 100) # Mock exams: 300 max points
+    total_points = earned_points
             
     # Natijani saqlash
     result = ExamResult(
@@ -873,6 +876,7 @@ def api_start_test(subject_id):
         # Store question IDs and correct answers in session for secure grading
         session['active_test_subject_id'] = subject.id
         session['active_test_grading'] = {str(q['id']): q['correct_option'] for q in questions}
+        session['active_test_difficulty'] = difficulty
         
         return jsonify({
             'success': True,
@@ -912,7 +916,17 @@ def api_submit_test():
                 correct_count += 1
                 
         score = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
-        earned_points = score * 10 # Calculated securely on server
+        
+        # Multiplier based on difficulty
+        difficulty = session.get('active_test_difficulty', 'advanced')
+        if difficulty == 'beginner': 
+            multiplier = 50
+        elif difficulty == 'intermediate': 
+            multiplier = 100
+        else: 
+            multiplier = 150
+            
+        earned_points = int(score * multiplier / 100) # Calculated securely on server
 
         # Subjectni topish
         subject = Subject.query.get(subject_id)
@@ -2205,8 +2219,11 @@ def submit_quiz(id):
             final_score = int((student_score_points / total_max_points) * 100)
         correct_val = int(student_score_points)
 
-    # Award XP
-    earned_points = int(final_score * 10 if not quiz.is_unique else final_score * 15)
+    # Award XP: Standard Quiz (100 max), AI Unique Quiz (150 max)
+    multiplier = 10 if not quiz.is_unique else 15 # multiplier * score / 10 is wrong if we want total points. 
+    # Let's use clean scale:
+    max_points = 100 if not quiz.is_unique else 150
+    earned_points = int(final_score * max_points / 100)
     current_user.points += earned_points
     
     # 3. Save Unified Result
